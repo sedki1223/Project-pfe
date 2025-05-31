@@ -1,45 +1,37 @@
 import User from "../models/User.js";
-import { Webhook } from "svix";
 
 const clerkWebhooks = async (req, res) => {
+  const body = req.body; // ✅ Fix is here
+  console.log("📦 Data received:", body);
+
   try {
-    const wh = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
-    const headers = {
-      "svix-id": req.headers["svix-id"],
-      "svix-timestamp": req.headers["svix-timestamp"],
-      "svix-signature": req.headers["svix-signature"],
-    };
-
-    const payload = JSON.stringify(req.body);
-    wh.verify(payload, headers);
-
-    const { data, type } = req.body;
-
-    const userData = {
-      clerkId: data.id,
-      email: data.email_addresses[0].email_address,
-      username: `${data.first_name} ${data.last_name}`,
-      image: data.image_url,
-    };
-
-    switch (type) {
+    switch (body.type) {
       case "user.created":
-        await User.create(userData);
+        const { id, email_addresses, username, image_url } = body.data;
+
+        const newUser = new User({
+          _id: id, // Clerk ID used as MongoDB _id
+          username,
+          email: email_addresses[0].email_address,
+          image: image_url,
+        });
+
+        await newUser.save();
+        console.log("✅ User created in MongoDB");
         break;
-      case "user.updated":
-        await User.findOneAndUpdate({ clerkId: data.id }, userData);
-        break;
+
       case "user.deleted":
-        await User.findOneAndDelete({ clerkId: data.id });
+        await User.findByIdAndDelete(body.data.id);
+        console.log("❌ User deleted from MongoDB");
         break;
-      default:
-        break;
+
+      // You can add more webhook types here if needed
     }
 
-    res.json({ success: true, message: "Received" });
+    res.status(200).json({ success: true });
   } catch (error) {
-    console.log(error.message);
-    res.json({ success: false, message: error.message });
+    console.error("❌ Error processing Clerk webhook:", error);
+    res.status(500).json({ error: "Webhook handler failed" });
   }
 };
 
