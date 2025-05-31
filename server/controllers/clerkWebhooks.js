@@ -1,37 +1,44 @@
-import User from "../models/User.js";
+import User from "../models/user.js";
 
 const clerkWebhooks = async (req, res) => {
-  const body = req.body; // ✅ Fix is here
-  console.log("📦 Data received:", body);
-
   try {
-    switch (body.type) {
-      case "user.created":
-        const { id, email_addresses, username, image_url } = body.data;
+    const { body } = req;
 
-        const newUser = new User({
-          _id: id, // Clerk ID used as MongoDB _id
-          username,
-          email: email_addresses[0].email_address,
-          image: image_url,
-        });
+    console.log("📦 Data received:", body);
 
-        await newUser.save();
-        console.log("✅ User created in MongoDB");
-        break;
+    const userData = body.data;
 
-      case "user.deleted":
-        await User.findByIdAndDelete(body.data.id);
-        console.log("❌ User deleted from MongoDB");
-        break;
+    const clerkId = userData.id;
+    const email = userData.email_addresses?.[0]?.email_address;
+    const image = userData.image_url || userData.profile_image_url;
+    const username = userData.username || email?.split("@")[0]; // fallback if username is null
 
-      // You can add more webhook types here if needed
+    if (!clerkId || !email || !image) {
+      console.error("❌ Missing required user data");
+      return res.status(400).json({ message: "Missing required user fields" });
     }
 
-    res.status(200).json({ success: true });
+    // Check if user already exists to avoid duplicates
+    const existingUser = await User.findOne({ clerkId });
+    if (existingUser) {
+      console.log("ℹ️ User already exists:", existingUser.email);
+      return res.status(200).json({ message: "User already exists" });
+    }
+
+    const newUser = new User({
+      clerkId,
+      email,
+      image,
+      username,
+    });
+
+    await newUser.save();
+
+    console.log("✅ New user saved:", email);
+    res.status(200).json({ message: "User saved successfully" });
   } catch (error) {
     console.error("❌ Error processing Clerk webhook:", error);
-    res.status(500).json({ error: "Webhook handler failed" });
+    res.status(500).json({ message: "Error saving user" });
   }
 };
 

@@ -1,12 +1,32 @@
 import mongoose from "mongoose";
 
-const userSchema = mongoose.Schema({
-  _id: { type: String, required: true }, // Use Clerk user ID as _id
-  username: { type: String, required: true },
-  email: { type: String, required: true },
-  image: { type: String, required: true },
-  role: { type: String, enum: ["user", "hotelOwner"], default: "user" },
-}, { timestamps: true });
+const userSchema = new mongoose.Schema({
+  clerkId: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  username: {
+    type: String,
+    required: true, // ensure webhook always sends this (fallback from email)
+  },
+  email: {
+    type: String,
+    required: true,
+  },
+  image: {
+    type: String,
+    required: true,
+  },
+  role: {
+    type: String,
+    enum: ["user", "hotelOwner"],
+    default: "user",
+  },
+}, {
+  timestamps: true,
+});
 
-const User = mongoose.model("User", userSchema);
+const User = mongoose.models.User || mongoose.model("User", userSchema);
+
 export default User;
