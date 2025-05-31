@@ -3,5 +3,11 @@
     "@tailwindcss/vite": "^4.1.5",
     "react-icons": "^5.5.0",
     "tailwindcss": "^4.1.6"
+  },
+  "devDependencies": {
+    "concurrently": "^9.1.2"
+  },
+  "scripts": {
+    "dev": "concurrently \"npm run server --prefix server\" \"npm run dev --prefix client\""
   }
 }
