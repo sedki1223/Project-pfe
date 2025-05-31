@@ -24,10 +24,13 @@ import Layout from './pages/HotelOwner/Layout';
 import Dashboard from './pages/HotelOwner/Dashboard';
 import AddRoom from './pages/HotelOwner/AddRoom';
 import ListeRoom from './pages/HotelOwner/ListeRoom';
+import { Toaster } from 'react-hot-toast';
+import { useAppContext } from './context/AppContext';
 
 const App = () => {
   const location = useLocation();
   const isOwnerPath = location.pathname.startsWith('/owner');
+  const { showHotelReg } = useAppContext();
 
   return (
     <div className="flex flex-col min-h-screen">
@@ -36,6 +39,8 @@ const App = () => {
 
       {/* Optional: Render HotelReg only when needed */}
       {/* {showHotelReg && <HotelReg />} */}
+
+      <Toaster />
 
       <main className="flex-grow min-h-[70vh]">
         <Routes>

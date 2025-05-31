@@ -1,14 +1,14 @@
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema({
-  clerkId: {
+  _id: {
     type: String,
     required: true,
     unique: true,
   },
   username: {
     type: String,
-    required: true, // ensure webhook always sends this (fallback from email)
+    required: true,
   },
   email: {
     type: String,
@@ -23,6 +23,10 @@ const userSchema = new mongoose.Schema({
     enum: ["user", "hotelOwner"],
     default: "user",
   },
+  recentlyUsedHotels: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Hotel"
+  }],
 }, {
   timestamps: true,
 });

@@ -8,6 +8,7 @@ import { ClerkProvider } from '@clerk/clerk-react';
 import { Provider } from 'react-redux';
 import store from './redux/store';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { AppProvider } from './context/AppContext';
 
 
 const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
@@ -25,8 +26,10 @@ createRoot(document.getElementById('root')).render(
       <Provider store={store}>
         <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
           <BrowserRouter>
-            <App />
-            <Toaster />
+            <AppProvider>
+              <App />
+              <Toaster />
+            </AppProvider>
           </BrowserRouter>
         </GoogleOAuthProvider>
       </Provider>
