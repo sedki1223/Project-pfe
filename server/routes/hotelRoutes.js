@@ -1,9 +1,10 @@
 import express from 'express';
+import { protect } from '../middleware/authMiddleware.js';
 import { createHotel } from '../controllers/hotelController.js';
-import { protect } from '../controllers/authMiddleware.js';
 
 const hotelRouter = express.Router();
 
-hotelRouter.post('/', protect, createHotel); // Changed from get to post
+hotelRouter.get('/', protect, createHotel);
 
 export default hotelRouter;
+
