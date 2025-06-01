@@ -1,7 +1,7 @@
 import Booking from "../models/Booking.js";
 import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
-import User from "../models/User.js";
+
 
 // Function to check if a booking is available
 const checkBookingAvailability = async ({ checkInDate, checkOutDate, roomId }) => {

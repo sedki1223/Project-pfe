@@ -1,5 +1,5 @@
 import express from 'express';
-import { protect } from '../middleware/authMiddleware.js';
+import { protect } from '../controllers/authMiddleware.js';
 import { createHotel } from '../controllers/hotelController.js';
 
 const hotelRouter = express.Router();
