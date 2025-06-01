@@ -1,27 +1,26 @@
 import User from "../models/User.js";
+import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node';
 
-export const protect = async (req, res, next) => {
-  try {
-    console.log('req.headers:', req.headers);
-    console.log('req.auth:', req.auth);
+export const protect = [
+  ClerkExpressRequireAuth(), // verifies the token, populates req.auth
+  async (req, res, next) => {
+    try {
+      const clerkId = req.auth.userId;
 
-    const { clerkId } = req.auth;
+      if (!clerkId) {
+        return res.status(401).json({ success: false, message: "Unauthorized: No user ID found" });
+      }
 
-    if (!clerkId) {
-      console.log('No user ID in token');
-      return res.status(401).json({ success: false, message: "Unauthorized: No user ID in token." });
+      const user = await User.findOne({ clerkId });
+      if (!user) {
+        return res.status(401).json({ success: false, message: "Unauthorized: User not found" });
+      }
+
+      req.user = user;
+      next();
+    } catch (error) {
+      console.error("Protect middleware error:", error);
+      return res.status(500).json({ success: false, message: "Server error in auth middleware." });
     }
-
-    const user = await User.findOne({ clerkId });
-    if (!user) {
-      console.log('User not found in database');
-      return res.status(401).json({ success: false, message: "Unauthorized: User not found." });
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    console.error("Protect middleware error:", error);
-    res.status(500).json({ success: false, message: "Server error in auth middleware." });
   }
-};
+];
