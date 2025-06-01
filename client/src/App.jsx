@@ -24,6 +24,7 @@ import Layout from './pages/HotelOwner/Layout';
 import Dashboard from './pages/HotelOwner/Dashboard';
 import AddRoom from './pages/HotelOwner/AddRoom';
 import ListeRoom from './pages/HotelOwner/ListeRoom';
+
 import { Toaster } from 'react-hot-toast';
 import { useAppContext } from './context/AppContext';
 
@@ -33,15 +34,17 @@ const App = () => {
   const { showHotelReg } = useAppContext();
 
   return (
-    <div className="flex flex-col min-h-screen">
-      {/* Show Navbar only if not on /owner pages */}
+    <div className="flex flex-col min-h-screen relative">
+      {/* Navbar for public routes */}
       {!isOwnerPath && <Navbar />}
 
-      {/* Optional: Render HotelReg only when needed */}
-      {/* {showHotelReg && <HotelReg />} */}
-
+      {/* Toast notification */}
       <Toaster />
 
+      {/* Global modals (like Hotel registration) */}
+      {showHotelReg && <HotelReg />}
+
+      {/* Main routes */}
       <main className="flex-grow min-h-[70vh]">
         <Routes>
           {/* Public Pages */}
@@ -68,7 +71,7 @@ const App = () => {
         </Routes>
       </main>
 
-      {/* Show Footer only if not on /owner pages */}
+      {/* Footer for public routes */}
       {!isOwnerPath && <Footer />}
     </div>
   );
