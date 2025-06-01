@@ -1,45 +1,36 @@
 import User from "../models/User.js";
 
-const clerkWebhooks = async (req, res) => {
+export default async function clerkWebhooks(req, res) {
+  const { type, data } = req.body;
+
+  console.log("📦 Data received:", req.body);
+
   try {
-    const { body } = req;
+    if (type === "user.created") {
+      const email = data.email_addresses?.[0]?.email_address;
+      const image = data.image_url;
+      const clerkId = data.id;
+      const username = email.split("@")[0]; // or use another strategy
 
-    console.log("📦 Data received:", body);
+      if (!email || !clerkId || !image) {
+        console.error("❌ Missing required user data");
+        return res.status(400).send("Missing data");
+      }
 
-    const userData = body.data;
+      const newUser = await User.create({
+        clerkId,
+        username,
+        email,
+        image,
+      });
 
-    const clerkId = userData.id;
-    const email = userData.email_addresses?.[0]?.email_address;
-    const image = userData.image_url || userData.profile_image_url;
-    const username = userData.username || email?.split("@")[0]; // fallback if username is null
-
-    if (!clerkId || !email || !image) {
-      console.error("❌ Missing required user data");
-      return res.status(400).json({ message: "Missing required user fields" });
+      console.log("✅ New user saved:", newUser.email);
+      return res.status(200).send("user.created handled");
     }
 
-    // Check if user already exists to avoid duplicates
-    const existingUser = await User.findOne({ clerkId });
-    if (existingUser) {
-      console.log("ℹ️ User already exists:", existingUser.email);
-      return res.status(200).json({ message: "User already exists" });
-    }
-
-    const newUser = new User({
-      clerkId,
-      email,
-      image,
-      username,
-    });
-
-    await newUser.save();
-
-    console.log("✅ New user saved:", email);
-    res.status(200).json({ message: "User saved successfully" });
-  } catch (error) {
-    console.error("❌ Error processing Clerk webhook:", error);
-    res.status(500).json({ message: "Error saving user" });
+    return res.status(200).send("Event received");
+  } catch (err) {
+    console.error("❌ Failed to save user:", err.message);
+    return res.status(500).send("Internal Server Error");
   }
-};
-
-export default clerkWebhooks;
+}
