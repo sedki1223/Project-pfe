@@ -1,8 +1,6 @@
 import multer from "multer";
 
-const upload = multer({ storage: multer.diskStorage() });
+// Use memoryStorage instead of diskStorage for serverless environments
+const upload = multer({ storage: multer.memoryStorage() });
 
 export default upload;
-
-// This middleware uses multer to handle file uploads on disk.
-// It can be used in routes to process file uploads, such as images for hotels.
