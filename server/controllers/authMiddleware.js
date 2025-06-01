@@ -14,10 +14,10 @@ export const protect = async (req, res, next) => {
     }
 
     req.user = user;
-    next();
+    next(); // Add this line to ensure next() is called
   } catch (error) {
     console.error("Protect middleware error:", error);
     res.status(500).json({ success: false, message: "Server error in auth middleware." });
+    next(); // Add this line to ensure next() is called
   }
 };
-
