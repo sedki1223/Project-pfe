@@ -1,5 +1,7 @@
+import dotenv from "dotenv";
+dotenv.config(); // ✅ Explicitly load environment variables at the top
+
 import express from "express";
-import "dotenv/config";
 import cors from "cors";
 import connectDB from "./configs/db.js";
 import { clerkMiddleware } from "@clerk/express";
@@ -12,8 +14,10 @@ import bookingRouter from "./routes/bookingRoutes.js";
 
 const startServer = async () => {
   try {
-    await connectDB(); // ✅ Ensure DB is connected before anything else
-    connectCloudinary();
+    console.log("📦 MONGODB_URI =", process.env.MONGODB_URI); // 👈 TEMP debug log
+
+    await connectDB(); // ✅ Connect to MongoDB
+    connectCloudinary(); // ✅ Connect Cloudinary
 
     const app = express();
     app.use(cors());
@@ -34,4 +38,4 @@ const startServer = async () => {
   }
 };
 
-startServer(); // 🚀
+startServer();
