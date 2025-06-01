@@ -1,9 +1,9 @@
 import express from 'express';
-import Hotel from '../models/Hotel';
+import { createHotel } from '../controllers/hotelController.js';
+import { protect } from '../controllers/authMiddleware.js';
 
 const hotelRouter = express.Router();
 
-hotelRouter.get('/', protect, registerHotel);
+hotelRouter.post('/', protect, createHotel); // Changed from get to post
 
 export default hotelRouter;
-
