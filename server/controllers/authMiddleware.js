@@ -2,13 +2,13 @@ import { requireAuth } from "@clerk/express";
 import User from "../models/User.js";
 
 export const protect = [
-  requireAuth(), // Clerk middleware verifies token and populates req.auth
+  requireAuth(), // ✅ This validates Clerk JWT and adds req.auth.userId
   async (req, res, next) => {
     try {
       const clerkId = req.auth.userId;
 
       if (!clerkId) {
-        return res.status(401).json({ success: false, message: "Unauthorized: No user ID found" });
+        return res.status(401).json({ success: false, message: "Unauthorized: No Clerk ID" });
       }
 
       const user = await User.findOne({ clerkId });
@@ -20,7 +20,7 @@ export const protect = [
       next();
     } catch (error) {
       console.error("Protect middleware error:", error);
-      return res.status(500).json({ success: false, message: "Server error in auth middleware." });
+      res.status(500).json({ success: false, message: "Server error in auth middleware." });
     }
-  }
+  },
 ];
