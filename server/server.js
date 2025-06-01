@@ -4,7 +4,7 @@ dotenv.config(); // ✅ Explicitly load environment variables at the top
 import express from "express";
 import cors from "cors";
 import connectDB from "./configs/db.js";
-import { clerkMiddleware, ClerkExpressRequireAuth } from "@clerk/express";
+import { clerkMiddleware, requireAuth } from "@clerk/express";
 import clerkWebhooks from "./controllers/clerkWebhooks.js";
 import userRouter from "./routes/userRoutes.js";
 import hotelRouter from "./routes/hotelRoutes.js";

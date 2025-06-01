@@ -1,8 +1,5 @@
-import User from "../models/User.js";
-import { ClerkExpressRequireAuth } from '@clerk/clerk-sdk-node';
-
-export const protect = [
-  ClerkExpressRequireAuth(), // verifies the token, populates req.auth
+const protect = [
+  requireAuth(), // Clerk middleware verifies token and populates req.auth
   async (req, res, next) => {
     try {
       const clerkId = req.auth.userId;
