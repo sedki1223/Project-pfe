@@ -1,11 +1,17 @@
-import mongoose from "mongoose";
+// ./configs/db.js
+import mongoose from 'mongoose';
 
 const connectDB = async () => {
   try {
-    await mongoose.connect(`${process.env.MONGODB_URI}/hotel-booking`);
-    console.log("Database Connected");
+    mongoose.set('bufferCommands', false); // Optional, fail fast
+    await mongoose.connect(process.env.MONGO_URI, {
+      useNewUrlParser: true,
+      useUnifiedTopology: true,
+    });
+    console.log('✅ MongoDB Connected');
   } catch (error) {
-    console.log(error.message);
+    console.error('❌ MongoDB connection failed:', error);
+    process.exit(1); // Stop app if DB connection fails
   }
 };
 
