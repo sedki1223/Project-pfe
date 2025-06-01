@@ -1,4 +1,7 @@
-const protect = [
+import { requireAuth } from "@clerk/express";
+import User from "../models/User.js";
+
+export const protect = [
   requireAuth(), // Clerk middleware verifies token and populates req.auth
   async (req, res, next) => {
     try {
