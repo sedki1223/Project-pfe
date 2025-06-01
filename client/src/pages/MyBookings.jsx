@@ -1,9 +1,37 @@
-import React, { useState } from 'react'
+import React, { use, useState } from 'react'
 import Title from '../components/Title'
-import { assets, userBookingsDummyData } from '../assets/assets'
+import { assets } from '../assets/assets'
+import { User } from 'lucide-react'
 
 const MyBookings = () => {
-  const [bookings, setBookings] = useState(userBookingsDummyData)
+  const {  rooms, getToken, navigate, axios } = useAppContext()
+  const [bookings, setBookings] = useState([])
+
+  const fetchuserBookings = async () => {
+    try {
+      const token = await getToken()
+      if (!token) {
+        navigate('/login')
+        return
+      }
+      const { data } = await axios.get('/api/bookings/user', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      })
+      if (data.success) {
+        setBookings(data.bookings)
+      } else {
+        console.error('Failed to fetch bookings:', data.message)
+      }
+    } catch (error) {
+      console.error('Error fetching bookings:', error)
+    }
+  }
+
+  useEffect(() => {if (User) {
+    fetchuserBookings()
+  } }, [User])
 
   return (
     <div className='py-28 md:pb-35 md:pt-35 px-4 md:px-16 lg:px-24 xl:px-35'>

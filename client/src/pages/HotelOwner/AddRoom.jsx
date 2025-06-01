@@ -1,8 +1,13 @@
-import React, { useState } from 'react'
+import React, { use, useState } from 'react'
 import Title from '../../components/Title'
 import { assets } from '../../assets/assets'
+import { useAppContext } from '@/context/AppContext'
+import toast from 'react-hot-toast'
 
 const AddRoom = () => {
+
+    const {axios, getToken}= useAppContext()
+
     const [images, setImages]=useState({
         1:null,
         2:null,
@@ -20,16 +25,68 @@ const AddRoom = () => {
             'Pool Access': false,
         }
     })
-  return (
-    <form>
-        <Title align='left' font='outfit' title='Add Room' subTitle='fill in the details'/>
-        {/*Upload Area For Images */}
-        <p className='text-gray-800 mt-10'>Images</p>
-        <div  className='grid grid-cols-2 sm:flex gap-4 my-2 flex-wrap'>
-            {Object.keys(images).map((key)=>(
-                <label htmlFor={`roomImages${key}`} key={key}>
-                    <img className='max-h-13 cursor-pointer opacity-80' 
-                    src={images[key] ? URL.createObjectURL(images[key]) :assets.uploadArea}  alt="" />
+
+    const [loading, setLoading] = useState(false)
+
+    const onSubmitHandler = async (e) => {
+        e.preventDefault()
+        if(!inputs.roomType || !inputs.pricePerNight || !inputs.amenities || !Object.values(images).some(image => image)) {
+            toast.error('Please fill all the fields and upload images')
+            return;
+        }
+        setLoading(true)
+        try {   
+            const formData = new FormData();
+            formData.append('roomType', inputs.roomType);
+            formData.append('pricePerNight', inputs.pricePerNight);
+            const amenities = Object.keys(inputs.amenities).filter(key => inputs.amenities[key]);
+            formData.append('amenities', JSON.stringify(amenities));
+            Object.keys(images).forEach((key) => {
+                images[key] && formData.get('images', images[key]) 
+                    
+            });
+
+            const {data} = await axios.post('/api/rooms/', formData, {Headers: {
+                Authorization: `Bearer ${getToken()}`
+            }})
+            if (data.success) {
+                toast.success(data.message);
+                setInputs({
+                    roomType: '',
+                    pricePerNight: 0,
+                    amenities: {
+                        'Free Wifi': false,
+                        'Free Breakfast': false,
+                        'Free Service': false,
+                        'Mountain view': false,
+                        'Pool Access': false,
+                    }
+                })
+                setImages({
+                    1: null,
+                    2: null,
+                    3: null,
+                    4: null,
+                })
+        }else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            console.error(error);
+        }finally {
+            setLoading(false)
+        }
+    } 
+        return (
+        <form onSubmit={onSubmitHandler}>
+            <Title align='left' font='outfit' title='Add Room' subTitle='fill in the details'/>
+            {/*Upload Area For Images */}
+            <p className='text-gray-800 mt-10'>Images</p>
+            <div  className='grid grid-cols-2 sm:flex gap-4 my-2 flex-wrap'>
+                {Object.keys(images).map((key)=>(
+                    <label htmlFor={`roomImages${key}`} key={key}>
+                        <img className='max-h-13 cursor-pointer opacity-80' 
+                        src={images[key] ? URL.createObjectURL(images[key]) :assets.uploadArea}  alt="" />
                     <input type='file' accept='image/*' id={`roomImages${key}`} hidden onChange={e=>setImages({...images, [key]: e.target.files[0]})}></input>
                 </label>
             ))}
@@ -65,8 +122,8 @@ const AddRoom = () => {
                 </div>
             ))}
         </div>
-        <button className='bg-blue-600 text-white px-8 py-2 rounded mt-8 cursor-pointer hover:bg-blue-700'>
-            Add Room
+        <button className='bg-blue-600 text-white px-8 py-2 rounded mt-8 cursor-pointer hover:bg-blue-700' disabled={loading}>
+            {loading ? 'Adding Room...' : "Add Room"}
         </button>
     </form>
   )

@@ -1,5 +1,5 @@
 import axios from "axios";
-import { useState, useContext , useEffect} from "react";
+import { useState, useContext , useEffect, use} from "react";
 import { createContext } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
@@ -16,9 +16,28 @@ export const AppProvider = ({ children }) => {
     const { getToken } = useAuth();
     const [isOwner, setIsOwner] = useState(false);
     const [showHotelReg, setShowHotelReg] = useState(false);
+    const [rooms, setRooms] = useState([]);
+
+    const fetchRooms = async () => {
+        try {
+            const { data } = await axios.get('/api/rooms/owner', {
+                headers: {
+                    Authorization: `Bearer ${await getToken()}`
+                }
+            });
+            if (data.success) {
+                setRooms(data.rooms);
+            } else {
+                toast.error(data.message);
+            }
+        } catch (error) {
+            toast.error('Error fetching rooms:', error.message);        
+        }
+    };
+
     const fetchUser = async () => {
-        try{
-            const {data} = await axios.get("/api/user", {
+        try {
+            const { data } = await axios.get("/api/user", {
                 headers: {
                     Authorization: `Bearer ${await getToken()}`
                 }})
@@ -40,6 +59,10 @@ export const AppProvider = ({ children }) => {
             fetchUser();
         }
     }, [user]);
+
+    useEffect(() => { 
+        fetchRooms();
+    }, []);
     
     const value = {
         currency,
@@ -50,7 +73,9 @@ export const AppProvider = ({ children }) => {
         setIsOwner,
         axios,
         showHotelReg,
-        setShowHotelReg
+        setShowHotelReg,
+        rooms,
+        setRooms
     };
     return(
         <AppContext.Provider value={value}>

@@ -1,3 +1,4 @@
+import transporter from "../configs/nodeMailer.js";
 import Booking from "../models/Booking.js";
 import Hotel from "../models/Hotel.js";
 import Room from "../models/Room.js";
@@ -69,6 +70,34 @@ export const createBooking = async (req, res) => {
       guests: +guests,
       paymentMethod: "Pay at Hotel",
     });
+
+    const mailOptions = {
+      from: process.env.SENDER_EMAIL,
+      to: user.email,
+      subject: "Booking Confirmation",
+      html: `
+        <h1>Booking Confirmation</h1>
+        <p>Dear ${user.name},</p>
+        <p>Thank you for booking with us!</p>
+        <p>Here are your booking details:</p>
+        <ul>
+          <li><strong>Booking ID:</strong> booking ID: ${booking._id}</li>
+          <li><strong>Hotel</strong>: ${roomData.hotel.name}</li>
+          <li><strong>Room</strong>: ${roomData.name}</li>
+          <li><strong>Check-in</strong>: ${checkInDate.toDateString()}</li>
+          <li><strong>Check-out</strong>: ${checkOutDate.toDateString()}</li>
+          <li><strong>Total Price</strong>: ${process.env.CURRENCY}${totalPrice}</li>
+        </ul>
+        <p>We are excited to host you at our hotel. Please let us know if you have any special requests or requirements.</p>
+        <p>We look forward to welcoming you!</p>
+        <p>Hotel Management Team</p>
+        <p><strong>Note:</strong> This is an automated email, please do not reply.</p>
+        <p>For any queries, please contact us at ${process.env.SUPPORT_EMAIL}.</p>  
+        <p>Thank you for choosing us!</p>
+      `,
+    }
+
+    await transporter.sendMail(mailOptions);
 
     res.json({ success: true, message: "Booking created successfully" });
   } catch (error) {

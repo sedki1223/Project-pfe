@@ -1,14 +1,18 @@
 import React from 'react'
-import { assets, cities } from '../assets/assets'
+import { assets } from '../assets/assets'
+import { Navigate } from 'react-router-dom';
 
 const Hero = () => {
+
+
+
   return (
     <div className='flex flex-col items-start justify-center px-6 md:px-16 lg:px-24 xl:px-32 text-white bg-[url("/src/assets/heroImage.png")] bg-no-repeat bg-cover bg-center h-screen'>
       <p className='bg-[#49B9FF]/50 px-3.5 py-1 rounded-full mt-20'>The Ultimate Vacation Experience</p>
       <h1 className='font-playfair test-2x1 md:text-5x1 md:text-[56px] md:leading-[56px] font-blod md:font-extrablod max-w-x1 mt-4'>Plan Your Perfect Vacation</h1>
       <p className='max-w-130 mt-2 text-sm md:text-base'>enjoy your stay with us</p>
 
-      <form className='bg-white text-gray-500 rounded-lg px-6 py-4 mt-8 flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto'>
+      <form  className='bg-white text-gray-500 rounded-lg px-6 py-4 mt-8 flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto'>
 
 
             <div>
