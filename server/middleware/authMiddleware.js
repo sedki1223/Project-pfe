@@ -1,23 +1,13 @@
-import User from "../models/User.js";
+// middleware/authMiddleware.js
+import { ClerkExpressWithAuth } from '@clerk/clerk-sdk-node';
+
+export const clerkMiddleware = ClerkExpressWithAuth();
 
 export const protect = async (req, res, next) => {
-  try {
-    const { _id } = req.auth;
-
-    if (!_id) {
-      return res.status(401).json({ success: false, message: "Unauthorized: No user ID in token." });
-    }
-
-    const user = await User.findById(_id);
-    if (!user) {
-      return res.status(401).json({ success: false, message: "Unauthorized: User not found." });
-    }
-
-    req.user = user;
-    next();
-  } catch (error) {
-    console.error("Protect middleware error:", error);
-    res.status(500).json({ success: false, message: "Server error in auth middleware." });
+  if (!req.auth || !req.auth.userId) {
+    return res.status(401).json({ success: false, message: "Unauthorized" });
   }
-};
 
+  req.userId = req.auth.userId;
+  next();
+};
