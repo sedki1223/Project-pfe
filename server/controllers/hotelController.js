@@ -2,6 +2,8 @@ import Hotel from "../models/Hotel.js";
 import User from "../models/User.js";
 
 export const createHotel = async (req, res) => {
+  console.log("📥 Hotel Register API Hit: ", req.body);
+  console.log("👤 User: ", req.user?._id);
   try {
     const { name, address, contact } = req.body;
     const owner = req.user._id;

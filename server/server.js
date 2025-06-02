@@ -32,7 +32,7 @@ const startServer = async () => {
 
     // ✅ Routers
     app.use("/api/user", userRouter);
-    app.use("/api/hotel", hotelRouter);
+    app.use('/api/hotel', hotelRouter);
     app.use("/api/rooms", roomRouter);
     app.use("/api/bookings", bookingRouter);
 

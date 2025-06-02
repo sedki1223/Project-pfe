@@ -7,4 +7,5 @@ const hotelRouter = express.Router();
 // Change GET to POST and add /register path
 hotelRouter.post('/register', protect, createHotel);
 
+
 export default hotelRouter;
