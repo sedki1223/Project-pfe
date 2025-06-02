@@ -2,12 +2,11 @@ import React, { useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
 import { assets, facilityIcons, roomCommonData } from '../assets/assets'
 import StarRating from '../components/StarRating'
-import { c } from 'vite/dist/node/moduleRunnerTransport.d-DJ_mE5sf'
 import toast from 'react-hot-toast'
 
 const RoomDetails = () => {
   const { id } = useParams()
-  const {rooms, getToken, navigate , axios} = useAppContext()
+  const { rooms, getToken, navigate, axios } = useAppContext()
   const [room, setRoom] = useState(null)
   const [mainImage, setMainImage] = useState(null)
 
@@ -17,22 +16,18 @@ const RoomDetails = () => {
 
   const [isAvailable, setIsAvailable] = useState(false)
 
-  //check room availability
   const checkRoomAvailability = async (e) => {
     try {
-      //cheack if user is logged in
       e.preventDefault()
       const token = await getToken()
       if (!token) {
         navigate('/login')
         return
       }
-      // cheack if checkInDate and checkOutDate are selected
       if (!checkInDate || !checkOutDate) {
         toast.error('Please select check-in and check-out dates.')
         return
       }
-      // cheack is checkInDate is before checkOutDate
       if (new Date(checkInDate) >= new Date(checkOutDate)) {
         toast.error('Check-out date must be after check-in date.')
         return
@@ -50,26 +45,21 @@ const RoomDetails = () => {
       if (data.success) {
         setIsAvailable(true)
         toast.success('Room is available for booking!')
-        // Redirect to booking page or show booking form
       } else {
         setIsAvailable(false)
         toast.error('Room is not available for the selected dates.')
       }
-    }
-    
-    catch (error) {
-      toast.error("Error checking room availability:", error)
+    } catch (error) {
+      toast.error("Error checking room availability. " + (error.response?.data?.message || error.message))
     }
   }
 
-  // onSubmitHanler function to check room availability & book the room
   const onSubmitHandler = async (e) => {
     try {
       e.preventDefault()
       if (!isAvailable) {
-        return checkRoomAvailability();
+        return checkRoomAvailability()
       }
-      // If room is available, proceed with booking
       const token = await getToken()
       if (!token) {
         navigate('/login')
@@ -88,28 +78,29 @@ const RoomDetails = () => {
       })
       if (data.success) {
         toast.success('Room booked successfully!')
-        navigate('/bookings')
-        scrollTo(0, 0)
+        navigate('/bookings', { replace: true })
       } else {
         toast.error('Error booking the room. Please try again.')
       }
-    }
-    catch (error) {
-      toast.error("Error booking the room:", error)
+    } catch (error) {
+      toast.error("Error booking the room. " + (error.response?.data?.message || error.message))
     }
   }
 
   useEffect(() => {
     const foundRoom = rooms.find(room => room._id === id)
     if (foundRoom) {
-      room && setRoom(foundRoom)
-      room && setMainImage(foundRoom.images[0])
+      setRoom(foundRoom)
+      setMainImage(foundRoom.images[0])
     }
-  }, [rooms])
+  }, [rooms, id])
 
-  return room && (
+  if (!room) {
+    return <div className="min-h-screen flex justify-center items-center">Loading...</div>
+  }
+
+  return (
     <div className='py-28 md:py-35 px-4 md:px-16 lg:px-24 xl:px-32'>
-      {/* room Details */}
       <div className='flex flex-col md:flex-row items-start md:items-center gap-2'>
         <h1 className='text-3xl md:text-4xl font-playfair'>
           {room.hotel.name} <span className='font-inter text-sm'>{room.roomType}</span>
@@ -117,26 +108,22 @@ const RoomDetails = () => {
         <p className='text-xs font-inter py-1.5 px-3 text-white bg-orange-500 rounded-full'>20% OFF</p>
       </div>
 
-      {/* room rating */}
       <div className='flex items-center gap-1 mt-2'>
         <StarRating />
         <p className='ml-2'>200+ reviews</p>
       </div>
 
-      {/* room address */}
       <div className='flex items-center gap-2 mt-2'>
         <img src={assets.locationIcon} alt="location-icon" />
         <span>{room.hotel.address}</span>
       </div>
 
-      {/* room images */}
       <div className='flex flex-col lg:flex-row mt-6 gap-6'>
         <div className='lg:w-1/2 w-full'>
-          <img src={mainImage} alt="Room Image"
-            className='w-full rounded-xl shadow-lg object-cover' />
+          <img src={mainImage} alt="Room Image" className='w-full rounded-xl shadow-lg object-cover' />
         </div>
         <div className='grid grid-cols-2 gap-4 lg:w-1/2 w-full'>
-          {room?.images.length > 1 && room.images.map((image, index) => (
+          {room?.images?.slice(1).map((image, index) => (
             <img
               onClick={() => setMainImage(image)}
               key={index}
@@ -148,7 +135,6 @@ const RoomDetails = () => {
         </div>
       </div>
 
-      {/* room Highlights */}
       <div className='flex flex-col md:flex-row md:justify-between mt-10'>
         <div className='flex flex-col'>
           <h1 className='text-3xl md:text-4xl font-playfair'>Experience Luxury Like Never Before</h1>
@@ -161,51 +147,37 @@ const RoomDetails = () => {
             ))}
           </div>
         </div>
-
-        {/* room Price */}
         <p className='text-2xl font-medium'>${room.pricePerNight}/night</p>
       </div>
 
-      {/* checkIn Checkout Form */}
-      <form onSubmit={onSubmitHandler} className='flex flex-col md:flex-row items-start md:items-center justify-between 
+      <form onSubmit={onSubmitHandler} className='flex flex-col md:flex-row flex-wrap items-start md:items-center justify-between 
       bg-white shadow-[0px_0px_20px_rgba(0,0,0,0.15)] p-6 rounded-xl mx-auto mt-16 max-w-6xl'>
         <div className='flex flex-col flex-wrap md:flex-row items-start md:items-center gap-4 md:gap-10 text-gray-500'>
           <div className='flex flex-col'>
-            <label htmlFor="checkInDate" className='font-medium'>
-              Check-In
-            </label>
-            <input onChange={(e) => setCheckInDate(e.target.value)} min={new Date().toISOString().split('T')[0]} type="date" id='checkInDate' placeholder='Check-In' className='w-full rounded border border-gray-300 
-            px-3 py-2 mt-1.5 outline-none' required />
+            <label htmlFor="checkInDate" className='font-medium'>Check-In</label>
+            <input onChange={(e) => setCheckInDate(e.target.value)} min={new Date().toISOString().split('T')[0]} type="date" id='checkInDate' className='w-full rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none' required />
           </div>
 
           <div className='w-px h-15 bg-gray-300/70 max-md:hidden'></div>
 
           <div className='flex flex-col'>
-            <label htmlFor="checkOutDate" className='font-medium'>
-              Check-Out
-            </label>
-            <input onChange={(e) => setCheckOutDate(e.target.value)} min={checkOutDate} disabled={!checkInDate} type="date" id='checkOutDate' placeholder='Check-Out' className='w-full rounded border border-gray-300 
-            px-3 py-2 mt-1.5 outline-none' required />
+            <label htmlFor="checkOutDate" className='font-medium'>Check-Out</label>
+            <input onChange={(e) => setCheckOutDate(e.target.value)} min={checkInDate} disabled={!checkInDate} type="date" id='checkOutDate' className='w-full rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none' required />
           </div>
 
           <div className='w-px h-15 bg-gray-300/70 max-md:hidden'></div>
 
           <div className='flex flex-col'>
-            <label htmlFor="guests" className='font-medium'>
-              Guests
-            </label>
-            <input onChange={(e) => setGuests(e.target.value)} value={guests} type="number" id='guests' placeholder='1' className='max-w-20 rounded border border-gray-300 
-            px-3 py-2 mt-1.5 outline-none' required />
+            <label htmlFor="guests" className='font-medium'>Guests</label>
+            <input onChange={(e) => setGuests(e.target.value)} value={guests} type="number" id='guests' min="1" className='max-w-20 rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none' required />
           </div>
         </div>
 
-        <button type='submit' className='bg-primary hover:bg-primary-dull active:scale-95 transition-all 
-        text-white rounded-md max-md:w-full max-md:mt-6 md:px-25 py-3 md:py-4 text-base cursor-pointer'>
+        <button type='submit' className='bg-primary hover:bg-primary-dull active:scale-95 transition-all text-white rounded-md max-md:w-full max-md:mt-6 md:px-25 py-3 md:py-4 text-base cursor-pointer'>
           {isAvailable ? 'Book Now' : 'Check Availability'}
         </button>
       </form>
 
-      {/* common Specification */}
       <div className='mt-25 space-y-4'>
         {roomCommonData.map((spec, index) => (
           <div key={index} className='flex items-start gap-2'>
@@ -219,12 +191,9 @@ const RoomDetails = () => {
       </div>
 
       <div className='max-w-3xl border-y border-gray-300 my-15 py-10 text-gray-500'>
-        <p>
-          description for the room
-        </p>
+        <p>description for the room</p>
       </div>
 
-      {/* Hosted By */}
       <div className='flex flex-col items-start gap-4'>
         <div className='flex gap-4'>
           <img src={room.hotel.owner.image} alt="Host" className='h-14 w-14 md:h-18 md:w-18 rounded-full' />
@@ -236,8 +205,7 @@ const RoomDetails = () => {
             </div>
           </div>
         </div>
-        <button className='px-6 py-2.5 mt-4 rounded text-white bg-primary 
-        hover:bg-primary-dull transition-all cursor-pointer'>Contact Now</button>
+        <button className='px-6 py-2.5 mt-4 rounded text-white bg-primary hover:bg-primary-dull transition-all cursor-pointer'>Contact Now</button>
       </div>
     </div>
   )

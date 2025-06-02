@@ -1,7 +1,8 @@
-import React, { use, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import Title from '../components/Title'
 import { assets } from '../assets/assets'
 import { User } from 'lucide-react'
+import { useAppContext } from '@/context/AppContext'
 
 const MyBookings = () => {
   const {  rooms, getToken, navigate, axios } = useAppContext()
