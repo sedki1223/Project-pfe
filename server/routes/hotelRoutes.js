@@ -5,7 +5,11 @@ import { createHotel } from '../controllers/hotelController.js';
 const hotelRouter = express.Router();
 
 // Change GET to POST and add /register path
-hotelRouter.post('/register', protect, createHotel);
+// hotelRoutes.js
+// Comment out protect temporarily
+hotelRouter.post('/register', /* protect, */ createHotel);
+hotelRouter.get('/test', (req, res) => res.json({ message: 'Hotel router works' }));
+
 
 
 export default hotelRouter;

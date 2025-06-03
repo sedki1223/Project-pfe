@@ -1,16 +1,45 @@
 import React, { useState } from 'react';
 import { assets, cities } from '../assets/assets';
+import { useAppContext } from '@/context/AppContext';
+import toast from 'react-hot-toast';
 
 const FoodReg = ({ setShowFoodReg }) => {
+  const { axios, getToken, setIsOwner } = useAppContext();
+
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
 
-  const onSubmitHandler = (event) => {
+  const onSubmitHandler = async (event) => {
     event.preventDefault();
-    alert(`Registered Restaurant:\nName: ${name}\nContact: ${contact}\nAddress: ${address}\nCity: ${city}`);
-    setShowFoodReg(false);
+
+    try {
+      const { data } = await axios.post(
+        '/api/food/register',
+        {
+          name,
+          contact,
+          address,
+          city,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${await getToken()}`,
+          },
+        }
+      );
+
+      if (data.success) {
+        toast.success(data.message);
+        setIsOwner(true);
+        setShowFoodReg(false);
+      } else {
+        toast.error(data.message);
+      }
+    } catch (error) {
+      toast.error(error.message || "Something went wrong.");
+    }
   };
 
   return (
@@ -85,26 +114,6 @@ const FoodReg = ({ setShowFoodReg }) => {
             />
           </div>
 
-          {/* City Dropdown */}
-          <div className="w-full mt-4">
-            <label htmlFor="city" className="font-medium text-gray-500">
-              City
-            </label>
-            <select
-              id="city"
-              value={city}
-              onChange={(e) => setCity(e.target.value)}
-              className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
-              required
-            >
-              <option value="" disabled>Select city</option>
-              {cities.map((c) => (
-                <option key={c} value={c}>{c}</option>
-              ))}
-            </select>
-          </div>
-
-          {/* Submit */}
           <button
             type="submit"
             className="bg-indigo-500 hover:bg-indigo-600 transition-all text-white mr-auto px-6 py-2 rounded cursor-pointer mt-6"
