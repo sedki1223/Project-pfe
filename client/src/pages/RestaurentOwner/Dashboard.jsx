@@ -2,50 +2,36 @@ import React, { useState, useEffect } from 'react'
 import Title from '../../components/Title'
 import { assets } from '../../assets/assets'
 import toast from 'react-hot-toast'
+import { useAuth } from '@clerk/clerk-react' // assuming Clerk auth
 
 const Dashboard = () => {
-  const currency = '$' // or get from context if available
+  const currency = process.env.REACT_APP_CURRENCY || '$'
+  const { getToken } = useAuth()
   const [dashboardData, setDashboardData] = useState({
     orders: [],
     totalOrders: 0,
     totalRevenue: 0,
   })
 
-  // Mock fetching dashboard data (replace with backend call later)
   const fetchDashboardData = async () => {
     try {
-      // Simulate fetch delay
-      await new Promise((resolve) => setTimeout(resolve, 500))
-      // Mock data example
-      const data = {
-        success: true,
-        dashboardData: {
-          totalOrders: 5,
-          totalRevenue: 450,
-          orders: [
-            {
-              user: { username: 'JohnDoe' },
-              dish: { dishName: 'Spicy Chicken' },
-              totalPrice: 50,
-              isPaid: true,
-            },
-            {
-              user: { username: 'JaneSmith' },
-              dish: { dishName: 'Veggie Salad' },
-              totalPrice: 30,
-              isPaid: false,
-            },
-            // add more mock orders if needed
-          ],
+      const token = await getToken({ template: 'your-template' }) // adjust if needed
+      const res = await fetch('/api/foods/vendor-orders', {
+        headers: {
+          Authorization: `Bearer ${token}`,
         },
-      }
+      })
+
+      const data = await res.json()
+
       if (data.success) {
         setDashboardData(data.dashboardData)
       } else {
-        toast.error(data.message)
+        toast.error(data.message || 'Failed to load dashboard data')
       }
     } catch (error) {
       toast.error('Error fetching dashboard data')
+      console.error(error)
     }
   }
 
@@ -95,7 +81,8 @@ const Dashboard = () => {
             {dashboardData.orders.map((item, index) => (
               <tr key={index}>
                 <td className='py-3 px-4 text-gray-700 border-t border-gray-300'>{item.user.username}</td>
-                <td className='py-3 px-4 text-gray-700 border-t border-gray-300 max-sm:hidden'>{item.dish.dishName}</td>
+                {/* Adjusted from dish to food per your backend */}
+                <td className='py-3 px-4 text-gray-700 border-t border-gray-300 max-sm:hidden'>{item.food.name}</td>
                 <td className='py-3 px-4 text-gray-700 border-t border-gray-300 text-center'>
                   {currency} {item.totalPrice}
                 </td>

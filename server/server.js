@@ -9,10 +9,13 @@ import connectCloudinary from "./configs/cloudinary.js";
 import { clerkMiddleware } from "@clerk/express";
 import clerkWebhooks from "./controllers/clerkWebhooks.js";
 
+// Routers
 import userRouter from "./routes/userRoutes.js";
 import hotelRouter from "./routes/hotelRoutes.js";
 import roomRouter from "./routes/roomRoutes.js";
 import bookingRouter from "./routes/bookingRoutes.js";
+import foodOrderRouter from "./routes/foodOrderRoutes.js"; // ✅ New
+import foodRouter from './routes/foodRouter.js';           // <-- Add this line
 
 const startServer = async () => {
   try {
@@ -24,17 +27,19 @@ const startServer = async () => {
     app.use(cors());
     app.use(express.json());
 
-    // ✅ Clerk middleware (must be before protected routes)
+    // Clerk middleware (must be before protected routes)
     app.use(clerkMiddleware());
 
     app.post("/api/clerk", clerkWebhooks);
     app.get("/", (req, res) => res.send("API is working"));
 
-    // ✅ Routers
+    // Routers
     app.use("/api/user", userRouter);
-    app.use('/api/hotel', hotelRouter);
+    app.use("/api/hotel", hotelRouter);
     app.use("/api/rooms", roomRouter);
     app.use("/api/bookings", bookingRouter);
+    app.use("/api/food-orders", foodOrderRouter);
+    app.use("/api/food", foodRouter);    // <-- Add this line
 
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));

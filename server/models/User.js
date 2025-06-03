@@ -18,12 +18,16 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["user", "hotelOwner"],
+    enum: ["user", "hotelOwner", "foodOwner"],
     default: "user",
   },
   recentlyUsedHotels: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: "Hotel"
+  }],
+  recentlyUsedFoods: [{
+    type: mongoose.Schema.Types.ObjectId,
+    ref: "Food"
   }],
 }, {
   timestamps: true,

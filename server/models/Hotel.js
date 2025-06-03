@@ -5,9 +5,9 @@ const hotelSchema = new mongoose.Schema({
   address: { type: String, required: true },
   contact: { type: String, required: true },
   owner: { type: String, ref: "User", required: true },
-  price: { type: Number, required: true },
-  rating: { type: Number, required: true },
-  amenities: { type: [String], required: true },
+  price: { type: Number },          // remove required: true
+  rating: { type: Number },         // remove required: true
+  amenities: { type: [String] },    // remove required: true
 },{timestamps: true});
 
 const Hotel = mongoose.model("Hotel", hotelSchema);

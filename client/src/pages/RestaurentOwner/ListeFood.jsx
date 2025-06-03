@@ -1,46 +1,66 @@
 import React, { useEffect, useState } from 'react'
 import Title from '../../components/Title'
+import toast from 'react-hot-toast'
+import { useAuth } from '@clerk/clerk-react' // adjust based on your auth method
 
 const ListeFood = () => {
+  const { getToken } = useAuth()
   const [foods, setFoods] = useState([])
 
-  // Mock data for demo
-  const mockFoods = [
-    {
-      _id: '1',
-      dishName: 'Couscous Royal',
-      ingredients: ['Semolina', 'Lamb', 'Vegetables'],
-      price: 20,
-      isAvailable: true,
-    },
-    {
-      _id: '2',
-      dishName: 'Brik à l\'œuf',
-      ingredients: ['Tuna', 'Egg', 'Parsley'],
-      price: 7,
-      isAvailable: false,
-    },
-    {
-      _id: '3',
-      dishName: 'Ojja Merguez',
-      ingredients: ['Tomato', 'Merguez', 'Egg'],
-      price: 15,
-      isAvailable: true,
-    },
-  ]
+  // Fetch foods from backend
+  const fetchFoods = async () => {
+    try {
+      const token = await getToken({ template: 'your-template' }) // adjust if needed
+      const res = await fetch('/api/foods/vendor-foods', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      })
+      const data = await res.json()
 
-  // Load mock data once
+      if (data.success) {
+        setFoods(data.foods) // adjust key if different
+      } else {
+        toast.error(data.message || 'Failed to load foods')
+      }
+    } catch (error) {
+      toast.error('Error fetching foods')
+      console.error(error)
+    }
+  }
+
   useEffect(() => {
-    setFoods(mockFoods)
+    fetchFoods()
   }, [])
 
-  // Toggle availability in state
-  const toggleAvailability = (foodId) => {
-    setFoods((prevFoods) =>
-      prevFoods.map((food) =>
-        food._id === foodId ? { ...food, isAvailable: !food.isAvailable } : food
-      )
-    )
+  // Toggle availability and update backend
+  const toggleAvailability = async (foodId, currentStatus) => {
+    try {
+      const token = await getToken({ template: 'your-template' }) // adjust if needed
+      const res = await fetch(`/api/foods/${foodId}`, {
+        method: 'PATCH',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ isAvailable: !currentStatus }),
+      })
+      const data = await res.json()
+
+      if (data.success) {
+        setFoods((prevFoods) =>
+          prevFoods.map((food) =>
+            food._id === foodId ? { ...food, isAvailable: !currentStatus } : food
+          )
+        )
+        toast.success('Availability updated')
+      } else {
+        toast.error(data.message || 'Failed to update availability')
+      }
+    } catch (error) {
+      toast.error('Error updating availability')
+      console.error(error)
+    }
   }
 
   return (
@@ -69,7 +89,7 @@ const ListeFood = () => {
                 <td className='py-3 px-4 border-t border-gray-300 text-center'>
                   <label className='relative inline-flex items-center cursor-pointer gap-3'>
                     <input
-                      onChange={() => toggleAvailability(item._id)}
+                      onChange={() => toggleAvailability(item._id, item.isAvailable)}
                       type='checkbox'
                       className='sr-only peer'
                       checked={item.isAvailable}
