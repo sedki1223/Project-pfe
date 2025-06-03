@@ -5,7 +5,7 @@ import {
   getVendorFoodOrders,
   getVendorFoods,
   updateFoodAvailability,
-} from '../controllers/foodController.js';
+} from '../controllers/orderController.js';
 
 import { protect } from '../controllers/authMiddleware.js';
 
