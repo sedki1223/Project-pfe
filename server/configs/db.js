@@ -4,8 +4,7 @@ import mongoose from 'mongoose';
 const connectDB = async () => {
   try {
     mongoose.set('bufferCommands', false); // Optional, fail fast
-    await mongoose.connect(process.env.MONGODB_URI
-, {
+    await mongoose.connect(`${process.env.MONGODB_URI}/hotel-booking`, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
     });
