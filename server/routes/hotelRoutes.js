@@ -1,10 +1,11 @@
-import express from "express";
-import { createHotel } from "../controllers/hotelController.js";
-import { protect } from "../controllers/authMiddleware.js";
+import express from 'express';
+import { protect } from '../controllers/authMiddleware.js';
+import { createHotel } from '../controllers/hotelController.js';
 
-const router = express.Router();
+const hotelRouter = express.Router();
 
-// POST /api/hotels - Create a new hotel (protected route)
-router.post("/", protect, createHotel);
+// Change GET to POST and add /register path
+hotelRouter.post('/register', protect, createHotel);
 
-export default router;
+
+export default hotelRouter;

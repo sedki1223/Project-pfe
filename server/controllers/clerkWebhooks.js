@@ -1,42 +1,36 @@
 import User from "../models/User.js";
-import {Webhook} from "svix"
 
+export default async function clerkWebhooks(req, res) {
+  const { type, data } = req.body;
 
-export const clerkWebhooks = async (req, res) => {
-  try{
-    const whook = new Webhook(process.env.CLERK_WEBHOOK_SECRET);
+  console.log("📦 Data received:", req.body);
 
-    const headers ={
-      "svix-id": req.headers["svix-id"],
-      "svix-timestamp": req.headers["svix-timestamp"],
-      "svix-signature": req.headers["svix-signature"]
-      
-    };
-    await whook.verify(JSON.stringify(req.body), headers);
+  try {
+    if (type === "user.created") {
+      const email = data.email_addresses?.[0]?.email_address;
+      const image = data.image_url;
+      const clerkId = data.id;
+      const username = email.split("@")[0]; // or use another strategy
 
-    const {data, type} = req.body
-    const userData ={
-      clerkId: data.id,
-      email: data.email_addresses[0]?.email_address ,
-      username: data.first_name+" "+data.last_name ,
-      image: data.image_url,
-     }
-     switch(type){
-      case "user.created":
-        await User.create(userData);
-        break;
-      case "user.updated": 
-        await User.findOneAndUpdate({clerkId:data.id}, userData);
-        break;
-      case "user.deleted":
-        await User.findOneAndDelete ({clerkId:data.id});
-        break;
-     }
-     res.json({message: "Webhook processed successfully"});
-  } catch (error) {
-    console.error("Error processing Clerk webhook:", error);
-    return res.status(500).json({ error: "Internal Server Error" });
+      if (!email || !clerkId || !image) {
+        console.error("❌ Missing required user data");
+        return res.status(400).send("Missing data");
+      }
+
+      const newUser = await User.create({
+        clerkId,
+        username,
+        email,
+        image,
+      });
+
+      console.log("✅ New user saved:", newUser.email);
+      return res.status(200).send("user.created handled");
+    }
+
+    return res.status(200).send("Event received");
+  } catch (err) {
+    console.error("❌ Failed to save user:", err.message);
+    return res.status(500).send("Internal Server Error");
   }
 }
-
-export default clerkWebhooks;

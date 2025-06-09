@@ -1,45 +1,18 @@
 import React, { useState } from 'react';
 import { assets, cities } from '../assets/assets';
-import { useAppContext } from '@/context/AppContext';
-import toast from 'react-hot-toast';
 
 const FoodReg = ({ setShowFoodReg }) => {
-  const { axios, getToken, setIsOwner } = useAppContext();
-
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
 
-  const onSubmitHandler = async (event) => {
+  const onSubmitHandler = (event) => {
     event.preventDefault();
-
-    try {
-      const { data } = await axios.post(
-        '/api/food/register',
-        {
-          name,
-          contact,
-          address,
-          city,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${await getToken()}`,
-          },
-        }
-      );
-
-      if (data.success) {
-        toast.success(data.message);
-        setIsOwner(true);
-        setShowFoodReg(false);
-      } else {
-        toast.error(data.message);
-      }
-    } catch (error) {
-      toast.error(error.message || "Something went wrong.");
-    }
+    // For now just alert or console.log the form data
+    alert(`Registered Restaurant:\nName: ${name}\nContact: ${contact}\nAddress: ${address}\nCity: ${city}`);
+    // Close the form
+    setShowFoodReg(false);
   };
 
   return (
