@@ -15,7 +15,7 @@ import hotelRouter from "./routes/hotelRoutes.js";
 import roomRouter from "./routes/roomRoutes.js";
 import bookingRouter from "./routes/bookingRoutes.js";
 import foodOrderRouter from "./routes/foodOrderRoutes.js"; // ✅ New
-import foodRouter from './routes/foodRouter.js';           // <-- Add this line
+import foodRouter from './routes/foodRoutes.js';           // <-- Add this line
 
 const startServer = async () => {
   try {
