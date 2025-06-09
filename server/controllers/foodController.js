@@ -3,10 +3,10 @@ import User from "../models/User.js";
 
 export const createFood = async (req, res) => {
   console.log("📥 Food Register API Hit: ", req.body);
-  console.log("👤 User: ", req.user?._id);
+  console.log("👤 User: ", req.user?.clerkId);
   try {
     const { name, description, contact } = req.body;
-    const owner = req.user._id;
+    const owner = req.user.clerkId;
 
     const existingFood = await Food.findOne({ owner });
 

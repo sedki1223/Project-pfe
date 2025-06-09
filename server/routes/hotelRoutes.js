@@ -1,15 +1,10 @@
-import express from 'express';
-import { protect } from '../controllers/authMiddleware.js';
-import { createHotel } from '../controllers/hotelController.js';
+import express from "express";
+import { createHotel } from "../controllers/hotelController.js";
+import { protect } from "../controllers/authMiddleware.js";
 
-const hotelRouter = express.Router();
+const router = express.Router();
 
-// Change GET to POST and add /register path
-// hotelRoutes.js
-// Comment out protect temporarily
-hotelRouter.post('/register', /* protect, */ createHotel);
-hotelRouter.get('/test', (req, res) => res.json({ message: 'Hotel router works' }));
+// POST /api/hotels - Create a new hotel (protected route)
+router.post("/", protect, createHotel);
 
-
-
-export default hotelRouter;
+export default router;
