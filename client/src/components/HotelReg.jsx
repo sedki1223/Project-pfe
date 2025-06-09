@@ -6,28 +6,30 @@ import toast from 'react-hot-toast';
 const HotelReg = () => {
   const { setShowHotelReg, axios, getToken, setIsOwner } = useAppContext();
 
+  const [isHotel, setIsHotel] = useState(true);
+
+  // Common form fields
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
 
+  // Extra restaurant field example (if needed)
+  const [cuisineType, setCuisineType] = useState(''); // example extra for restaurant
+
   const onSubmitHandler = async (event) => {
     event.preventDefault();
     try {
-      const { data } = await axios.post(
-        '/api/hotel/register',
-        {
-          name,
-          contact,
-          address,
-          city,
+      const url = isHotel ? '/api/hotel/register' : '/api/food/register'; // Adjust your API endpoints accordingly
+      const body = isHotel
+        ? { name, contact, address, city }
+        : { name, contact, address, city, cuisineType };
+
+      const { data } = await axios.post(url, body, {
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
         },
-        {
-          headers: {
-            Authorization: `Bearer ${await getToken()}`,
-          },
-        }
-      );
+      });
 
       if (data.success) {
         toast.success(data.message);
@@ -37,7 +39,7 @@ const HotelReg = () => {
         toast.error(data.message);
       }
     } catch (error) {
-      toast.error(error.message);
+      toast.error(error.message || 'Something went wrong');
     }
   };
 
@@ -63,12 +65,37 @@ const HotelReg = () => {
             className="absolute top-4 right-4 h-4 w-4 cursor-pointer"
             onClick={() => setShowHotelReg(false)}
           />
-          <p className="text-2xl font-semibold mt-6">Register Your Hotel</p>
 
-          {/* Hotel Name */}
-          <div className="w-full mt-4">
+          {/* Toggle Buttons */}
+          <div className="flex space-x-4 mb-6">
+            <button
+              type="button"
+              onClick={() => setIsHotel(true)}
+              className={`px-4 py-2 rounded ${
+                isHotel ? 'bg-indigo-600 text-white' : 'bg-gray-200'
+              }`}
+            >
+              Promote Hotel
+            </button>
+            <button
+              type="button"
+              onClick={() => setIsHotel(false)}
+              className={`px-4 py-2 rounded ${
+                !isHotel ? 'bg-green-600 text-white' : 'bg-gray-200'
+              }`}
+            >
+              Promote Restaurant
+            </button>
+          </div>
+
+          <p className="text-2xl font-semibold mt-2 mb-6">
+            {isHotel ? 'Register Your Hotel' : 'Register Your Restaurant'}
+          </p>
+
+          {/* Common Fields */}
+          <div className="w-full mt-2">
             <label htmlFor="name" className="font-medium text-gray-500">
-              Hotel Name
+              {isHotel ? 'Hotel Name' : 'Restaurant Name'}
             </label>
             <input
               id="name"
@@ -81,7 +108,6 @@ const HotelReg = () => {
             />
           </div>
 
-          {/* Phone */}
           <div className="w-full mt-4">
             <label htmlFor="contact" className="font-medium text-gray-500">
               Phone
@@ -97,7 +123,6 @@ const HotelReg = () => {
             />
           </div>
 
-          {/* Address */}
           <div className="w-full mt-4">
             <label htmlFor="address" className="font-medium text-gray-500">
               Address
@@ -113,11 +138,53 @@ const HotelReg = () => {
             />
           </div>
 
+          <div className="w-full mt-4">
+            <label htmlFor="city" className="font-medium text-gray-500">
+              City
+            </label>
+            <select
+              id="city"
+              onChange={(e) => setCity(e.target.value)}
+              value={city}
+              className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light bg-white"
+              required
+            >
+              <option value="" disabled>
+                Select a city
+              </option>
+              {cities.map((c, idx) => (
+                <option key={idx} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Extra Restaurant field */}
+          {!isHotel && (
+            <div className="w-full mt-4">
+              <label htmlFor="cuisineType" className="font-medium text-gray-500">
+                Cuisine Type
+              </label>
+              <input
+                id="cuisineType"
+                onChange={(e) => setCuisineType(e.target.value)}
+                value={cuisineType}
+                type="text"
+                placeholder="e.g. Italian, Chinese..."
+                className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
+                required={!isHotel}
+              />
+            </div>
+          )}
+
           <button
             type="submit"
-            className="bg-indigo-500 hover:bg-indigo-600 transition-all text-white mr-auto px-6 py-2 rounded cursor-pointer mt-6"
+            className={`${
+              isHotel ? 'bg-indigo-500 hover:bg-indigo-600' : 'bg-green-500 hover:bg-green-600'
+            } transition-all text-white mr-auto px-6 py-2 rounded cursor-pointer mt-6`}
           >
-            Register
+            {isHotel ? 'Register' : 'Register'}
           </button>
         </div>
       </form>

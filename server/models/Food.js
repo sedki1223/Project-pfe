@@ -1,15 +1,40 @@
-import mongoose from "mongoose";
+import mongoose from 'mongoose';
 
 const foodSchema = new mongoose.Schema({
-  name: { type: String, required: true },            // Name of the dish
-  description: { type: String, required: true },     // Description replaces address
-  contact: { type: String, required: true },         // Maybe the chef or restaurant contact
-  owner: { type: String, ref: "User", required: true },  // Owner (restaurant/chef)
-  price: { type: Number },                           // Price of the dish
-  rating: { type: Number },                          // Average rating
-  ingredients: { type: [String] },                   // Replaces amenities
-}, { timestamps: true });
+  name: {
+    type: String,
+    required: true,
+    trim: true,
+  },
+  description: {
+    type: String,
+    required: true,
+  },
+  restaurant: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User', // or 'Restaurant' if you have a separate model
+    required: true,
+  },
+  price: {
+    type: Number,
+    required: true,
+  },
+  image: {
+    type: String, // URL or path to image
+  },
+  category: {
+    type: String, // e.g. "Appetizer", "Main Course", "Dessert"
+  },
+  isAvailable: {
+    type: Boolean,
+    default: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
+});
 
-const Food = mongoose.model("Food", foodSchema);
+const Food = mongoose.model('Food', foodSchema);
 
 export default Food;

@@ -1,20 +1,20 @@
-import Food from "../models/Food.js";    
+import Restaurant from "../models/restaurant.js";    
 import User from "../models/User.js";
 
-export const createFood = async (req, res) => {
+export const createrestaurant = async (req, res) => {
   console.log("📥 Food Register API Hit: ", req.body);
   console.log("👤 User: ", req.user?._id);
   try {
     const { name, description, contact } = req.body;
     const owner = req.user._id;
 
-    const existingFood = await Food.findOne({ owner });
+    const existingFood = await Restaurant.findOne({ owner });
 
     if (existingFood) {
       return res.status(400).json({ success: false, message: "Food item already exists" });
     }
 
-    await Food.create({
+    await Restaurant.create({
       name,
       description,
       contact,

@@ -4,7 +4,7 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HotelReg from './components/HotelReg';
-import FoodReg from './components/FoodReg';
+import RestaurantReg from './components/RestaurantReg';  // updated import
 
 import Home from './pages/Home';
 import AllRooms from './pages/AllRooms';
@@ -36,7 +36,7 @@ import AllFoods from './pages/AllFood';
 const App = () => {
   const location = useLocation();
   const isOwnerPath = location.pathname.startsWith('/owner');
-  const { showHotelReg, showFoodReg, setShowFoodReg } = useAppContext();
+  const { showHotelReg, showRestaurantReg, setShowRestaurantReg } = useAppContext();
 
   return (
     <div className="flex flex-col min-h-screen relative">
@@ -46,7 +46,7 @@ const App = () => {
 
       {/* Render modals separately */}
       {showHotelReg && <HotelReg />}
-      {showFoodReg && <FoodReg setShowFoodReg={setShowFoodReg} />}
+      {showRestaurantReg && <RestaurantReg setShowRestaurantReg={setShowRestaurantReg} />}
 
       <main className="flex-grow min-h-[70vh]">
         <Routes>

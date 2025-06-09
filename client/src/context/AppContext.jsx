@@ -18,9 +18,9 @@ export const AppProvider = ({ children }) => {
   const [isOwner, setIsOwner] = useState(false);
   const [ownerType, setOwnerType] = useState(null); // "hotelowner", "foodowner", or null
 
-  // Separate modal visibility states for hotel & food registration
+  // Separate modal visibility states for hotel & restaurant registration
   const [showHotelReg, setShowHotelReg] = useState(false);
-  const [showFoodReg, setShowFoodReg] = useState(false);
+  const [showRestaurantReg, setShowRestaurantReg] = useState(false);
 
   const [rooms, setRooms] = useState([]);
 
@@ -73,7 +73,7 @@ export const AppProvider = ({ children }) => {
       setOwnerType(null);
       setRooms([]);
       setShowHotelReg(false);
-      setShowFoodReg(false);
+      setShowRestaurantReg(false);
     }
   }, [user]);
 
@@ -87,8 +87,8 @@ export const AppProvider = ({ children }) => {
     setIsOwner,
     showHotelReg,
     setShowHotelReg,
-    showFoodReg,
-    setShowFoodReg,
+    showRestaurantReg,
+    setShowRestaurantReg,
     rooms,
     setRooms,
     axios,

@@ -21,39 +21,31 @@ const Navbar = () => {
   const { openSignIn } = useClerk();
   const location = useLocation();
 
-  // Modal toggles & role info from context
   const {
     user,
     isOwner,
     ownerType,
     setShowHotelReg,
-    setShowFoodReg,
+    setShowRestaurantReg, // updated here
   } = useAppContext();
 
-  // Scroll effect for navbar style
   useEffect(() => {
-    // Set initial scroll based on pathname
     if (location.pathname !== "/") setIsScrolled(true);
     else setIsScrolled(false);
 
-    // Scroll handler
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
-
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
 
-  // Open hotel registration modal
   const openHotelModal = () => {
     setShowHotelReg(true);
   };
 
-  // Open food registration modal
-  const openFoodModal = () => {
-    setShowFoodReg(true);
+  const openRestaurantModal = () => {
+    setShowRestaurantReg(true);
   };
 
-  // Keyboard support for menu toggle icon
   const handleMenuKeyDown = (e) => {
     if (e.key === "Enter" || e.key === " ") {
       e.preventDefault();
@@ -97,34 +89,31 @@ const Navbar = () => {
           </Link>
         ))}
 
-        {/* Show promote buttons only if user is owner */}
+        {/* Promote or Dashboard Button */}
+        {user && !isOwner && (
+          <button
+            onClick={openHotelModal}
+            className={`px-4 py-2 rounded-md border ${
+              isScrolled
+                ? "border-gray-700 text-gray-700 hover:bg-gray-100"
+                : "border-white text-white hover:bg-white hover:text-gray-700"
+            } transition-colors`}
+          >
+            Promote your Hotel/Restaurant
+          </button>
+        )}
+
         {user && isOwner && (
-          <>
-            {ownerType === "hotelowner" && (
-              <button
-                onClick={openHotelModal}
-                className={`px-4 py-2 rounded-md border ${
-                  isScrolled
-                    ? "border-gray-700 text-gray-700 hover:bg-gray-100"
-                    : "border-white text-white hover:bg-white hover:text-gray-700"
-                } transition-colors`}
-              >
-                Promote your Hotel
-              </button>
-            )}
-            {ownerType === "foodowner" && (
-              <button
-                onClick={openFoodModal}
-                className={`px-4 py-2 rounded-md border ${
-                  isScrolled
-                    ? "border-gray-700 text-gray-700 hover:bg-gray-100"
-                    : "border-white text-white hover:bg-white hover:text-gray-700"
-                } transition-colors`}
-              >
-                Promote your Restaurant
-              </button>
-            )}
-          </>
+          <Link
+            to="/dashboard"
+            className={`px-4 py-2 rounded-md border ${
+              isScrolled
+                ? "border-gray-700 text-gray-700 hover:bg-gray-100"
+                : "border-white text-white hover:bg-white hover:text-gray-700"
+            } transition-colors`}
+          >
+            Dashboard
+          </Link>
         )}
       </div>
 
@@ -182,32 +171,27 @@ const Navbar = () => {
           </Link>
         ))}
 
-        {/* Show promote buttons only if user is owner */}
+        {/* Promote or Dashboard Button */}
+        {user && !isOwner && (
+          <button
+            onClick={() => {
+              openHotelModal();
+              setIsMenuOpen(false);
+            }}
+            className="px-4 py-2 rounded-md border border-gray-700 text-gray-700 hover:bg-gray-100 transition-colors w-full max-w-xs"
+          >
+            Promote your Hotel/Restaurant
+          </button>
+        )}
+
         {user && isOwner && (
-          <>
-            {ownerType === "hotelowner" && (
-              <button
-                onClick={() => {
-                  openHotelModal();
-                  setIsMenuOpen(false);
-                }}
-                className="px-4 py-2 rounded-md border border-gray-700 text-gray-700 hover:bg-gray-100 transition-colors w-full max-w-xs"
-              >
-                Promote your Hotel
-              </button>
-            )}
-            {ownerType === "foodowner" && (
-              <button
-                onClick={() => {
-                  openFoodModal();
-                  setIsMenuOpen(false);
-                }}
-                className="px-4 py-2 rounded-md border border-gray-700 text-gray-700 hover:bg-gray-100 transition-colors w-full max-w-xs"
-              >
-                Promote your Restaurant
-              </button>
-            )}
-          </>
+          <Link
+            to="/dashboard"
+            onClick={() => setIsMenuOpen(false)}
+            className="px-4 py-2 rounded-md border border-gray-700 text-gray-700 hover:bg-gray-100 transition-colors w-full max-w-xs text-center"
+          >
+            Dashboard
+          </Link>
         )}
 
         {!user && (

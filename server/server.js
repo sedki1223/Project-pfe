@@ -15,7 +15,7 @@ import hotelRouter from "./routes/hotelRoutes.js";
 import roomRouter from "./routes/roomRoutes.js";
 import bookingRouter from "./routes/bookingRoutes.js";
 import foodOrderRouter from "./routes/foodOrderRoutes.js"; // ✅ New
-import foodRouter from './routes/foodRoutes.js';           // <-- Add this line
+import restaurantRouter from './routes/restaurantRoutes.js';           // <-- Add this line
 
 const startServer = async () => {
   try {
@@ -39,7 +39,7 @@ const startServer = async () => {
     app.use("/api/rooms", roomRouter);
     app.use("/api/bookings", bookingRouter);
     app.use("/api/food-orders", foodOrderRouter);
-    app.use("/api/food", foodRouter);    // <-- Add this line
+    app.use("/api/restaurant", restaurantRouter);    // <-- Add this line
 
     const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
