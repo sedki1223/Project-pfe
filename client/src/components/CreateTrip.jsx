@@ -16,7 +16,6 @@ import { getAuth, GoogleAuthProvider, signInWithPopup, onAuthStateChanged } from
 import { app } from "@/service/firebaseConfig";
 import { useNavigate } from 'react-router-dom';
 
-// Firebase Auth
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
 
@@ -46,13 +45,14 @@ const CreateTrip = () => {
   const [user, setUser] = useState(null);
 
   useEffect(() => {
-    onAuthStateChanged(auth, (user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setUser(user);
       } else {
         setUser(null);
       }
     });
+    return () => unsubscribe();
   }, []);
 
   const loginWithGoogle = async () => {
@@ -103,37 +103,24 @@ const CreateTrip = () => {
     }
 
     setLoading(true);
-    toast.loading("Generating your trip plan...");
+    const loadingToastId = toast.loading("Generating your trip plan...");
 
     const FINAL_PROMPT = `Plan a trip for someone interested in ${lookingFor}, staying ${days} days, with a ${budget.title} budget, traveling as ${travelers.title}.`;
 
     try {
-      const response = await axios.post(
-        'https://api.openai.com/v1/chat/completions',
-        {
-          model: 'gpt-4o-mini', // change if needed
-          messages: [
-            { role: 'system', content: 'You are a helpful travel assistant.' },
-            { role: 'user', content: FINAL_PROMPT },
-          ],
-          temperature: 0.7,
-        },
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            Authorization: `Bearer ${process.env.VITE_OPENAI_API_KEY}`,
-          },
-        }
-      );
+      // IMPORTANT: Call your backend API route here, NOT OpenAI directly!
+      const response = await axios.post('/api/generate-trip', {
+        prompt: FINAL_PROMPT,
+      });
 
-      const aiText = response.data.choices[0].message.content;
+      const aiText = response.data.tripPlan;
 
-      toast.dismiss();
+      toast.dismiss(loadingToastId);
       toast.success("Trip generated successfully!");
 
       await SaveAiTrip(aiText);
     } catch (error) {
-      toast.dismiss();
+      toast.dismiss(loadingToastId);
       toast.error("Something went wrong while generating the trip!");
       console.error("Trip generation error:", error);
     } finally {
