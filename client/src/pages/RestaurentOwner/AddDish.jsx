@@ -52,7 +52,7 @@ const AddDish = () => {
         if (images[key]) formData.append('images', images[key])
       })
 
-      const { data } = await axios.post('/api/food/', formData, {
+      const { data } = await axios.post('/api/restaurant/', formData, {
         headers: {
           Authorization: `Bearer ${getToken()}`,
           'Content-Type': 'multipart/form-data',

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import axios from 'axios';
 import {
   Dialog,
   DialogContent,
@@ -18,17 +19,6 @@ import { useNavigate } from 'react-router-dom';
 // Firebase Auth
 const auth = getAuth(app);
 const provider = new GoogleAuthProvider();
-
-// Mock AI response function (replace with your actual AI call)
-const chatSession = {
-  sendMessage: async (prompt) => {
-    return {
-      response: {
-        text: () => `Generated trip based on: ${prompt}`
-      }
-    };
-  }
-};
 
 const SelectBudgetOptions = [
   { id: 1, title: 'Low Budget', desc: 'Affordable and efficient', icon: '💰' },
@@ -88,8 +78,8 @@ const CreateTrip = () => {
 
     if (name === 'days') {
       const num = parseInt(value);
-      if (num > 0 && num <= 4) { // fix: allow max 4 days
-        setFormData({ ...formData, days: num }); // store number type for days
+      if (num > 0 && num <= 4) {
+        setFormData({ ...formData, days: num });
         setError(null);
       } else {
         setError('Number of days must be between 1 and 4.');
@@ -115,15 +105,33 @@ const CreateTrip = () => {
     setLoading(true);
     toast.loading("Generating your trip plan...");
 
-    // Use the .title fields of budget and travelers to avoid object error
     const FINAL_PROMPT = `Plan a trip for someone interested in ${lookingFor}, staying ${days} days, with a ${budget.title} budget, traveling as ${travelers.title}.`;
 
     try {
-      const result = await chatSession.sendMessage(FINAL_PROMPT);
+      const response = await axios.post(
+        'https://api.openai.com/v1/chat/completions',
+        {
+          model: 'gpt-4o-mini', // change if needed
+          messages: [
+            { role: 'system', content: 'You are a helpful travel assistant.' },
+            { role: 'user', content: FINAL_PROMPT },
+          ],
+          temperature: 0.7,
+        },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${process.env.VITE_OPENAI_API_KEY}`,
+          },
+        }
+      );
+
+      const aiText = response.data.choices[0].message.content;
+
       toast.dismiss();
       toast.success("Trip generated successfully!");
 
-      await SaveAiTrip(result.response.text());
+      await SaveAiTrip(aiText);
     } catch (error) {
       toast.dismiss();
       toast.error("Something went wrong while generating the trip!");
@@ -139,9 +147,8 @@ const CreateTrip = () => {
       userSelection: formData,
       tripData,
       userEmail: user?.email,
-      id: docId
+      id: docId,
     });
-    // Navigate to view trip page
     navigate('/view-trip/' + docId);
   };
 
@@ -197,7 +204,6 @@ const CreateTrip = () => {
               </div>
             ))}
           </div>
-          {/* Display selected budget title, safely */}
           {formData.budget && (
             <p className="mt-2 text-blue-600 font-semibold">
               Selected Budget: {formData.budget.title}
@@ -218,18 +224,18 @@ const CreateTrip = () => {
               >
                 <div className="text-4xl">{item.icon}</div>
                 <h2 className="font-bold text-lg">{item.title}</h2>
-                <p className="text-sm
-text-gray-500">{item.desc}</p>
+                <p className="text-sm text-gray-500">{item.desc}</p>
               </div>
             ))}
           </div>
-          {/* Display selected travelers title, safely */}
           {formData.travelers && (
             <p className="mt-2 text-blue-600 font-semibold">
               Selected Travelers: {formData.travelers.title}
             </p>
           )}
-        </div>    {/* Generate Button */}
+        </div>
+
+        {/* Generate Button */}
         <button
           onClick={OnGenerateTrip}
           disabled={loading}

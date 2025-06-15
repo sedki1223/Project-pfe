@@ -4,7 +4,7 @@ import { Route, Routes, useLocation } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import HotelReg from './components/HotelReg';
-import RestaurantReg from './components/RestaurantReg';  // updated import
+import RestaurantReg from './components/RestaurantReg';  
 
 import Home from './pages/Home';
 import AllRooms from './pages/AllRooms';
@@ -26,8 +26,6 @@ import Layout from './pages/HotelOwner/Layout';
 import Dashboard from './pages/HotelOwner/Dashboard';
 import AddRoom from './pages/HotelOwner/AddRoom';
 import ListeRoom from './pages/HotelOwner/ListeRoom';
-
-// Food owner pages
 
 import { Toaster } from 'react-hot-toast';
 import { useAppContext } from './context/AppContext';

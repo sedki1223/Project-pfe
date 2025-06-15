@@ -11,6 +11,7 @@ import Hotels from "@/components/Hotels";
 const ViewTrip = () => {
   const { tripId } = useParams();
   const [trip, setTrip] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (tripId) {
@@ -19,6 +20,7 @@ const ViewTrip = () => {
   }, [tripId]);
 
   const GetTripData = async () => {
+    setLoading(true);
     try {
       const docRef = doc(db, 'AiTrips', tripId);
       const docSnap = await getDoc(docRef);
@@ -31,10 +33,14 @@ const ViewTrip = () => {
     } catch (error) {
       toast.error('Error fetching trip data');
       console.error('Error getting trip:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  if (!trip) return <div className="p-10 text-center">Loading trip details...</div>;
+  if (loading) return <div className="p-10 text-center">Loading trip details...</div>;
+
+  if (!trip) return <div className="p-10 text-center text-red-600">Trip not found.</div>;
 
   return (
     <div className="p-10 md:px-20 lg:px-44 xl:px-56">

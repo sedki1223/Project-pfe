@@ -11,30 +11,37 @@ const RestaurantReg = () => {
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
 
-  const onSubmitHandler = async (e) => {
-    e.preventDefault();
-    try {
-      const { data } = await axios.post(
-        '/api/restaurant/register',
-        { name, contact, address, city },
-        {
-          headers: {
-            Authorization: `Bearer ${await getToken()}`,
-          },
-        }
-      );
-
-      if (data.success) {
-        toast.success(data.message);
-        setIsOwner(true);
-        setShowFoodReg(false);
-      } else {
-        toast.error(data.message);
+ const onSubmitHandler = async (e) => {
+  e.preventDefault();
+  try {
+    const { data } = await axios.post(
+      '/api/restaurant/register',
+      { name, contact, address, city },
+      {
+        headers: {
+          Authorization: `Bearer ${await getToken()}`,
+        },
       }
-    } catch (err) {
-      toast.error('Registration failed');
+    );
+
+    console.log("🌐 Raw API response:", data);
+
+    if (data.success) {
+      toast.success(data.message);
+      setIsOwner(true);
+      setShowFoodReg(false);
+    } else {
+      console.warn("⚠️ Backend responded with failure:", data);
+      toast.error(data.message || "Registration failed");
     }
-  };
+  } catch (err) {
+    console.error("❌ Registration Error:", err);
+    console.log("❗ Error response:", err.response?.data);
+    toast.error(err.response?.data?.message || err.message || "Registration failed");
+  }
+};
+
+
 
   return (
     <div

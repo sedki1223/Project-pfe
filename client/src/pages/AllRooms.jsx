@@ -1,10 +1,8 @@
 import React, { useMemo, useState } from 'react'
-import { assets, facilityIcons } from '../assets/assets'
-import { useSearchParams } from 'react-router-dom'
+import { assets, facilityIcons, roomsDummyData } from '../assets/assets' // fixed import name
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import StarRating from '../components/StarRating'
-import { useAppContext } from '@/context/AppContext'
 
-// Checkbox component
 const CheckBox = ({ label, selected = false, onChange = () => {} }) => (
   <label className='flex gap-3 items-center cursor-pointer mt-2 text-sm'>
     <input type="checkbox" checked={selected} onChange={(e) => onChange(e.target.checked, label)} />
@@ -12,7 +10,6 @@ const CheckBox = ({ label, selected = false, onChange = () => {} }) => (
   </label>
 )
 
-// Radio button component
 const RadioButton = ({ label, selected = false, onChange = () => {} }) => (
   <label className='flex gap-3 items-center cursor-pointer mt-2 text-sm'>
     <input type="radio" name="sortOption" checked={selected} onChange={() => onChange(label)} />
@@ -22,29 +19,28 @@ const RadioButton = ({ label, selected = false, onChange = () => {} }) => (
 
 const AllRooms = () => {
   const [searchParams, setSearchParams] = useSearchParams()
-  const { rooms, navigate, currency } = useAppContext()
   const [openFilters, setOpenFilters] = useState(false)
-
   const [selectedFilters, setSelectedFilters] = useState({
     roomType: [],
     priceRange: [],
   })
-
   const [selectedSortOption, setSelectedSortOption] = useState('')
+  const navigate = useNavigate()
+  const currency = '$'
 
   const roomTypes = ["Single Bed", "Double Bed", "Luxury Room", "Family suite"]
   const priceRanges = ["0 to 500", "500 to 1000", "1000 to 2000", "2000 to 3000"]
   const sortOptions = ["Price Low to High", "Price High to Low", "Newest First"]
 
   const handleFilterChange = (checked, value, type) => {
-    setSelectedFilters((prevFilters) => {
-      const updatedFilters = { ...prevFilters }
+    setSelectedFilters((prev) => {
+      const updated = { ...prev }
       if (checked) {
-        updatedFilters[type].push(value)
+        updated[type].push(value)
       } else {
-        updatedFilters[type] = updatedFilters[type].filter((item) => item !== value)
+        updated[type] = updated[type].filter((item) => item !== value)
       }
-      return updatedFilters
+      return updated
     })
   }
 
@@ -68,29 +64,23 @@ const AllRooms = () => {
   }
 
   const sortRooms = (a, b) => {
-    if (selectedSortOption === 'Price Low to High') {
-      return a.pricePerNight - b.pricePerNight
-    }
-    if (selectedSortOption === 'Price High to Low') {
-      return b.pricePerNight - a.pricePerNight
-    }
-    if (selectedSortOption === 'Newest First') {
-      return new Date(b.createdAt) - new Date(a.createdAt)
-    }
+    if (selectedSortOption === 'Price Low to High') return a.pricePerNight - b.pricePerNight
+    if (selectedSortOption === 'Price High to Low') return b.pricePerNight - a.pricePerNight
+    if (selectedSortOption === 'Newest First') return new Date(b.createdAt) - new Date(a.createdAt)
     return 0
   }
 
   const destination = searchParams.get('destination') || ''
 
   const filteredRooms = useMemo(() => {
-    return rooms
+    return roomsDummyData
       .filter(room =>
         matchesRoomType(room) &&
         matchesPriceRange(room) &&
         room.hotel.city.toLowerCase().includes(destination.toLowerCase())
       )
       .sort(sortRooms)
-  }, [rooms, selectedFilters, selectedSortOption, destination])
+  }, [selectedFilters, selectedSortOption, destination])
 
   const clearFilters = () => {
     setSelectedFilters({ roomType: [], priceRange: [] })
@@ -171,7 +161,7 @@ const AllRooms = () => {
           <div className='px-5 pt-5'>
             <p className='font-medium text-gray-800 pb-2'>Price Range</p>
             {priceRanges.map((range, index) => (
-              <CheckBox key={index} label={`${currency} ${range}`} selected={selectedFilters.priceRange.includes(range)} onChange={(checked) => handlePriceRangeChange(checked, range)} />
+              <CheckBox key={index} label={`${range}`} selected={selectedFilters.priceRange.includes(range)} onChange={(checked) => handlePriceRangeChange(checked, range)} />
             ))}
           </div>
 

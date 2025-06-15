@@ -8,41 +8,41 @@ const HotelReg = () => {
 
   const [isHotel, setIsHotel] = useState(true);
 
-  // Common form fields
   const [name, setName] = useState('');
   const [contact, setContact] = useState('');
   const [address, setAddress] = useState('');
   const [city, setCity] = useState('');
+  const [cuisineType, setCuisineType] = useState('');
 
-  // Extra restaurant field example (if needed)
-  const [cuisineType, setCuisineType] = useState(''); // example extra for restaurant
-
-  const onSubmitHandler = async (event) => {
-    event.preventDefault();
-    try {
-      const url = isHotel ? '/api/hotel/register' : '/api/food/register'; // Adjust your API endpoints accordingly
-      const body = isHotel
-        ? { name, contact, address, city }
-        : { name, contact, address, city, cuisineType };
-
-      const { data } = await axios.post(url, body, {
+const onSubmitHandler = async (e) => {
+  e.preventDefault();
+  try {
+    const { data } = await axios.post(
+      '/api/restaurant/register',
+      { name, contact, address, city },
+      {
         headers: {
           Authorization: `Bearer ${await getToken()}`,
         },
-      });
-
-      if (data.success) {
-        toast.success(data.message);
-        setIsOwner(true);
-        setShowHotelReg(false);
-      } else {
-        toast.error(data.message);
       }
-    } catch (error) {
-      toast.error(error.message || 'Something went wrong');
-    }
-  };
+    );
 
+    console.log("🌐 Raw API response:", data);
+
+    if (data.success) {
+      toast.success(data.message);
+      setIsOwner(true);
+      setShowFoodReg(false);
+    } else {
+      console.warn("⚠️ Backend responded with failure:", data);
+      toast.error(data.message || "Registration failed");
+    }
+  } catch (err) {
+    console.error("❌ Registration Error:", err);
+    console.log("❗ Error response:", err.response?.data);
+    toast.error(err.response?.data?.message || err.message || "Registration failed");
+  }
+};
   return (
     <div
       onClick={() => setShowHotelReg(false)}
@@ -70,7 +70,10 @@ const HotelReg = () => {
           <div className="flex space-x-4 mb-6">
             <button
               type="button"
-              onClick={() => setIsHotel(true)}
+              onClick={() => {
+                setIsHotel(true);
+                console.log('🏨 Switched to Hotel Registration');
+              }}
               className={`px-4 py-2 rounded ${
                 isHotel ? 'bg-indigo-600 text-white' : 'bg-gray-200'
               }`}
@@ -79,7 +82,10 @@ const HotelReg = () => {
             </button>
             <button
               type="button"
-              onClick={() => setIsHotel(false)}
+              onClick={() => {
+                setIsHotel(false);
+                console.log('🍽️ Switched to Restaurant Registration');
+              }}
               className={`px-4 py-2 rounded ${
                 !isHotel ? 'bg-green-600 text-white' : 'bg-gray-200'
               }`}
@@ -160,7 +166,6 @@ const HotelReg = () => {
             </select>
           </div>
 
-          {/* Extra Restaurant field */}
           {!isHotel && (
             <div className="w-full mt-4">
               <label htmlFor="cuisineType" className="font-medium text-gray-500">

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams } from 'react-router-dom';
 import StarRating from '../components/StarRating';
 import toast from 'react-hot-toast';
-import FoodData from '../data/FoodData';
-import { useAuth } from '@clerk/clerk-react';  // assuming Clerk for auth
+import { useAuth } from '@clerk/clerk-react';  // Clerk auth hook
+import { assets, dishesDummyData } from '../assets/assets'; // import your dummy data here
 
 const DishDetails = () => {
   const { id } = useParams();
@@ -12,26 +12,24 @@ const DishDetails = () => {
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
 
-  const { getToken } = useAuth(); // Clerk hook to get auth token
+  const { getToken } = useAuth();
 
   useEffect(() => {
-    const foundDish = FoodData.find((item) => item.id.toString() === id);
+    // Find dish by _id matching id from URL params
+    const foundDish = dishesDummyData.find((item) => item._id === id);
+
     if (foundDish) {
       setDish({
         ...foundDish,
-        images: foundDish.images && foundDish.images.length > 0 ? foundDish.images : [foundDish.img],
+        images: foundDish.images && foundDish.images.length > 0 ? foundDish.images : [],
         chef: {
           name: 'Chef Amira',
-          image: foundDish.chefImage || '',
+          image: '',
         },
-        restaurant: {
-          name: 'Tozeur Gourmet Kitchen',
-          address: '45 Palm Oasis Rd, Tozeur',
-        },
-        ingredients: ['Fresh Tomatoes', 'Organic Basil', 'Olive Oil'],
-        reviews: Math.floor(foundDish.rating * 30),
+        reviews: Math.floor(Math.random() * 100),
       });
-      setMainImage(foundDish.images && foundDish.images.length > 0 ? foundDish.images[0] : foundDish.img);
+
+      setMainImage(foundDish.images && foundDish.images.length > 0 ? foundDish.images[0] : '');
     }
   }, [id]);
 
@@ -42,8 +40,7 @@ const DishDetails = () => {
     setLoading(true);
 
     try {
-      // Get auth token for protected backend routes
-      const token = await getToken({ template: 'your-template-name' }); // replace with your Clerk template if needed
+      const token = await getToken({ template: 'your-template-name' }); // replace if needed
 
       const response = await fetch('/api/food-orders', {
         method: 'POST',
@@ -52,7 +49,7 @@ const DishDetails = () => {
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
-          foodId: dish.id,
+          foodId: dish._id,
           quantity: Number(quantity),
         }),
       });
@@ -76,35 +73,88 @@ const DishDetails = () => {
 
   return (
     <div className='py-28 md:py-35 px-4 md:px-16 lg:px-24 xl:px-32'>
-      {/* ... rest of your component ... */}
+      <div className="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg">
+        {/* Main Image */}
+        <img
+          src={mainImage}
+          alt={dish.name}
+          className="w-full max-h-96 object-cover rounded-lg mb-6"
+        />
 
-      {/* Order Form */}
-      <form onSubmit={handleOrder} className='flex flex-col md:flex-row items-start md:items-center justify-between bg-white shadow-[0px_0px_20px_rgba(0,0,0,0.15)] p-6 rounded-xl mx-auto mt-16 max-w-6xl'>
-        <div className='flex flex-col flex-wrap md:flex-row items-start md:items-center gap-4 md:gap-10 text-gray-500'>
-          <div className='flex flex-col'>
-            <label htmlFor="quantity" className='font-medium'>Quantity</label>
-            <input
-              onChange={(e) => setQuantity(e.target.value)}
-              value={quantity}
-              type="number"
-              id='quantity'
-              placeholder='1'
-              min='1'
-              className='max-w-20 rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none'
-              required
+        {/* Thumbnails */}
+        <div className="flex gap-4 mb-8">
+          {dish.images.slice(0, 4).map((img, index) => (
+            <img
+              key={index}
+              src={img}
+              alt={`${dish.name} image ${index + 1}`}
+              onClick={() => setMainImage(img)}
+              className={`w-20 h-20 object-cover rounded cursor-pointer border-2 ${
+                mainImage === img ? 'border-primary' : 'border-transparent'
+              } hover:border-primary transition-all`}
             />
-          </div>
+          ))}
         </div>
-        <button
-          type='submit'
-          disabled={loading}
-          className={`bg-primary hover:bg-primary-dull active:scale-95 transition-all text-white rounded-md max-md:w-full max-md:mt-6 md:px-25 py-3 md:py-4 text-base cursor-pointer ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
-        >
-          {loading ? 'Ordering...' : 'Order Now'}
-        </button>
-      </form>
 
-      {/* ... rest of your component ... */}
+        {/* Dish Info */}
+        <h1 className="text-3xl font-bold mb-2">{dish.name}</h1>
+        <p className="text-gray-700 mb-4">{dish.description}</p>
+
+        <div className="flex items-center mb-4">
+          <StarRating rating={4} /> {/* Hardcoded for demo */}
+          <span className="ml-2 text-sm text-gray-500">{dish.reviews} reviews</span>
+        </div>
+
+        <p className="text-lg font-semibold mb-4">
+          Price: ${dish.pricePerServing} per serving
+        </p>
+
+        {/* Ingredients */}
+        <div className="mb-6">
+          <h3 className="font-semibold mb-2">Ingredients:</h3>
+          <ul className="list-disc list-inside text-gray-600">
+            {dish.ingredients.map((ing, idx) => (
+              <li key={idx}>{ing}</li>
+            ))}
+          </ul>
+        </div>
+
+        {/* Restaurant Info */}
+        <div className="mb-6">
+          <h3 className="font-semibold">Restaurant:</h3>
+          <p>{dish.restaurant?.name || 'Unknown Restaurant'}</p>
+          <p>{dish.restaurant?.address || 'Address not available'}</p>
+        </div>
+
+        {/* Order Form */}
+        <form
+          onSubmit={handleOrder}
+          className='flex flex-col md:flex-row items-start md:items-center justify-between bg-white shadow-[0px_0px_20px_rgba(0,0,0,0.15)] p-6 rounded-xl mx-auto mt-16 max-w-6xl'
+        >
+          <div className='flex flex-col flex-wrap md:flex-row items-start md:items-center gap-4 md:gap-10 text-gray-500'>
+            <div className='flex flex-col'>
+              <label htmlFor="quantity" className='font-medium'>Quantity</label>
+              <input
+                onChange={(e) => setQuantity(e.target.value)}
+                value={quantity}
+                type="number"
+                id='quantity'
+                placeholder='1'
+                min='1'
+                className='max-w-20 rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none'
+                required
+              />
+            </div>
+          </div>
+          <button
+            type='submit'
+            disabled={loading}
+            className={`bg-primary hover:bg-primary-dull active:scale-95 transition-all text-white rounded-md max-md:w-full max-md:mt-6 md:px-25 py-3 md:py-4 text-base cursor-pointer ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          >
+            {loading ? 'Ordering...' : 'Order Now'}
+          </button>
+        </form>
+      </div>
     </div>
   );
 };

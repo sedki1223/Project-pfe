@@ -1,9 +1,8 @@
 import React, { useMemo, useState } from 'react';
-import { assets } from '../assets/assets';
+import { assets, dishesDummyData } from '../assets/assets'; // your updated dishesDummyData here
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import StarRating from '../components/StarRating';
 import { useAppContext } from '@/context/AppContext';
-import FoodData from '../data/FoodData'; // Dummy data
 
 const CheckBox = ({ label, selected = false, onChange = () => {} }) => (
   <label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
@@ -33,7 +32,7 @@ const RadioButton = ({ label, selected = false, onChange = () => {} }) => (
 const AllFoods = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { currency } = useAppContext();
+  const { currency = '$' } = useAppContext(); // fallback to $ if not provided
 
   const [openFilters, setOpenFilters] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState({
@@ -42,10 +41,15 @@ const AllFoods = () => {
   });
   const [selectedSortOption, setSelectedSortOption] = useState('');
 
-  const dishTypes = ['Pizza', 'Burger', 'Pasta', 'Salad'];
-  const priceRanges = ['0 to 10', '10 to 20', '20 to 50'];
+  // Updated dish types from your data
+  const dishTypes = ['Appetizer', 'Main Course', 'Dessert', 'Breakfast'];
+
+  // Price ranges - matches pricePerServing range
+  const priceRanges = [`${currency} 0 to 5`, `${currency} 5 to 10`, `${currency} 10 to 20`, `${currency} 20+`];
+
   const sortOptions = ['Price Low to High', 'Price High to Low', 'Newest First'];
 
+  // Helper to update filters
   const handleFilterChange = (checked, value, type) => {
     setSelectedFilters((prev) => {
       const updated = { ...prev };
@@ -55,35 +59,55 @@ const AllFoods = () => {
     });
   };
 
+  const handleDishTypeChange = (checked, value) => {
+    handleFilterChange(checked, value, 'dishType');
+  };
+
+  const handlePriceRangeChange = (checked, value) => {
+    handleFilterChange(checked, value, 'priceRange');
+  };
+
   const handleSortChange = (option) => setSelectedSortOption(option);
 
+  // Filtering helpers
   const matchesDishType = (dish) =>
     selectedFilters.dishType.length === 0 || selectedFilters.dishType.includes(dish.dishType);
 
   const matchesPriceRange = (dish) =>
     selectedFilters.priceRange.length === 0 ||
     selectedFilters.priceRange.some((rangeWithCurrency) => {
+      // Remove currency sign before splitting
       const range = rangeWithCurrency.replace(`${currency} `, '');
+      if (range.endsWith('+')) {
+        const min = Number(range.replace('+', ''));
+        return dish.pricePerServing >= min;
+      }
       const [min, max] = range.split(' to ').map(Number);
-      return dish.price >= min && dish.price <= max;
+      return dish.pricePerServing >= min && dish.pricePerServing <= max;
     });
 
+  // Sorting function
   const sortDishes = (a, b) => {
-    if (selectedSortOption === 'Price Low to High') return a.price - b.price;
-    if (selectedSortOption === 'Price High to Low') return b.price - a.price;
+    if (selectedSortOption === 'Price Low to High') return a.pricePerServing - b.pricePerServing;
+    if (selectedSortOption === 'Price High to Low') return b.pricePerServing - a.pricePerServing;
     if (selectedSortOption === 'Newest First') return new Date(b.createdAt) - new Date(a.createdAt);
     return 0;
   };
 
+  // Filter by destination query param (restaurant city)
   const destination = searchParams.get('destination') || '';
 
+  // Memoized filtered and sorted dishes list
   const filteredFoods = useMemo(() => {
-    return FoodData.filter(
-      (dish) =>
-        matchesDishType(dish) &&
-        matchesPriceRange(dish) &&
-        (dish.restaurant?.city?.toLowerCase() || '').includes(destination.toLowerCase())
-    ).sort(sortDishes);
+    return dishesDummyData
+      .filter(
+        (dish) =>
+          dish.isAvailable && // only available dishes
+          matchesDishType(dish) &&
+          matchesPriceRange(dish) &&
+          (dish.restaurant?.city?.toLowerCase() || '').includes(destination.toLowerCase())
+      )
+      .sort(sortDishes);
   }, [selectedFilters, selectedSortOption, destination, currency]);
 
   const clearFilters = () => {
@@ -94,6 +118,7 @@ const AllFoods = () => {
 
   return (
     <div className="flex flex-col-reverse lg:flex-row items-start justify-between pt-28 md:pt-35 px-4 md:px-16 lg:px-24 xl:px-32">
+      {/* Dish List */}
       <div className="flex-1">
         <div className="flex flex-col items-start text-left">
           <h1 className="font-playfair text-4xl md:text-[40px]">Available Dishes</h1>
@@ -107,43 +132,53 @@ const AllFoods = () => {
         ) : (
           filteredFoods.map((dish) => (
             <div
-              key={dish.id}
+              key={dish._id}
               className="flex flex-col md:flex-row items-start py-10 gap-6 border-b border-gray-300 last:pb-32 last:border-0 cursor-pointer"
               onClick={() => {
-                navigate(`/foods/${dish.id}`);
+                navigate(`/foods/${dish._id}`);
                 scrollTo(0, 0);
+              }}
+              role="button"
+              tabIndex={0}
+              onKeyPress={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  navigate(`/foods/${dish._id}`);
+                  scrollTo(0, 0);
+                }
               }}
             >
               <img
-                src={dish.images?.[0] || dish.img || ''}
+                src={dish.images?.[0] || assets.defaultFoodImage}
                 alt={dish.name}
-                className="max-h-65 md:w-1/2 rounded-xl shadow-lg object-cover"
+                className="max-h-[260px] md:w-1/2 rounded-xl shadow-lg object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = assets.defaultFoodImage;
+                }}
               />
               <div className="md:w-1/2 flex flex-col gap-2">
                 <p className="text-gray-500">{dish.restaurant?.city}</p>
                 <p className="text-gray-800 text-3xl font-playfair">{dish.name}</p>
                 <div className="flex items-center">
-                  <StarRating rating={dish.rating} />
+                  <StarRating rating={dish.rating || 4} /> {/* fallback to 4 stars if rating missing */}
                   <p className="ml-2">200+ reviews</p>
                 </div>
                 <div className="flex items-center gap-1 text-gray-500 mt-2 text-sm">
                   <img src={assets.locationIcon} alt="location-icon" />
                   <span>{dish.restaurant?.address}</span>
                 </div>
-
                 <div className="flex flex-wrap items-center mt-3 mb-6 gap-4">
-                  {dish.amenities?.map((item, index) => (
+                  {dish.ingredients?.map((ingredient, index) => (
                     <div
                       key={index}
                       className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F5F5FF]/70"
                     >
-                      <p className="text-xs">{item}</p>
+                      <img src={assets.ingredientIcons?.[ingredient]} alt={ingredient} className="w-5 h-5" />
+                      <p className="text-xs">{ingredient}</p>
                     </div>
                   ))}
                 </div>
-
                 <p className="text-xl font-medium text-gray-700">
-                  {currency} {dish.price}
+                  {currency} {dish.pricePerServing}
                 </p>
               </div>
             </div>
@@ -151,61 +186,66 @@ const AllFoods = () => {
         )}
       </div>
 
-      <aside className="bg-white w-80 border border-gray-300 text-gray-600 max-lg:mb-8 lg:mt-16">
+      {/* Filters */}
+      <div className="bg-white w-80 border border-gray-300 text-gray-600 max-lg:mb-8 lg:mt-16">
         <div className="flex items-center justify-between px-5 py-2.5 border-b border-gray-300">
           <p className="text-base font-medium text-gray-800">FILTERS</p>
-          <div className="text-xs cursor-pointer space-x-3">
-            <span onClick={() => setOpenFilters((prev) => !prev)} className="lg:hidden">
+          <div className="text-xs cursor-pointer">
+            <span onClick={() => setOpenFilters(!openFilters)} className="lg:hidden">
               {openFilters ? 'HIDE' : 'SHOW'}
             </span>
-            <span onClick={clearFilters} className="hidden lg:inline">
-              CLEAR
+            <span
+              onClick={clearFilters}
+              className="hidden lg:inline-block text-blue-600 hover:text-blue-800 cursor-pointer"
+            >
+              Clear all
             </span>
           </div>
         </div>
 
-        <div
-          className={`overflow-hidden transition-all duration-700 ${
-            openFilters ? 'h-auto' : 'h-0 lg:h-auto'
-          }`}
-        >
-          <div className="px-5 pt-5">
-            <p className="font-medium text-gray-800 pb-2">Dish Type</p>
-            {dishTypes.map((type, index) => (
-              <CheckBox
-                key={index}
-                label={type}
-                selected={selectedFilters.dishType.includes(type)}
-                onChange={(checked) => handleFilterChange(checked, type, 'dishType')}
-              />
-            ))}
-          </div>
+        {openFilters && (
+          <div className="p-5 space-y-4">
+            {/* Dish Type Filter */}
+            <div>
+              <p className="font-semibold mb-1 text-gray-700">Dish Type</p>
+              {dishTypes.map((type) => (
+                <CheckBox
+                  key={type}
+                  label={type}
+                  selected={selectedFilters.dishType.includes(type)}
+                  onChange={handleDishTypeChange}
+                />
+              ))}
+            </div>
 
-          <div className="px-5 pt-5">
-            <p className="font-medium text-gray-800 pb-2">Price Range</p>
-            {priceRanges.map((range, index) => (
-              <CheckBox
-                key={index}
-                label={`${currency} ${range}`}
-                selected={selectedFilters.priceRange.includes(`${currency} ${range}`)}
-                onChange={(checked) => handleFilterChange(checked, `${currency} ${range}`, 'priceRange')}
-              />
-            ))}
-          </div>
+            {/* Price Range Filter */}
+            <div>
+              <p className="font-semibold mb-1 text-gray-700">Price Range</p>
+              {priceRanges.map((range) => (
+                <CheckBox
+                  key={range}
+                  label={range}
+                  selected={selectedFilters.priceRange.includes(range)}
+                  onChange={handlePriceRangeChange}
+                />
+              ))}
+            </div>
 
-          <div className="px-5 pt-5 pb-7">
-            <p className="font-medium text-gray-800 pb-2">Sort By</p>
-            {sortOptions.map((option, index) => (
-              <RadioButton
-                key={index}
-                label={option}
-                selected={selectedSortOption === option}
-                onChange={handleSortChange}
-              />
-            ))}
+            {/* Sorting */}
+            <div>
+              <p className="font-semibold mb-1 text-gray-700">Sort By</p>
+              {sortOptions.map((option) => (
+                <RadioButton
+                  key={option}
+                  label={option}
+                  selected={selectedSortOption === option}
+                  onChange={handleSortChange}
+                />
+              ))}
+            </div>
           </div>
-        </div>
-      </aside>
+        )}
+      </div>
     </div>
   );
 };
