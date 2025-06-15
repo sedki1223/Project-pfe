@@ -1,8 +1,8 @@
-const express = require('express');
-const cors = require('cors');
-const dotenv = require('dotenv');
-const admin = require('./firebaseAdmin');
-const { Configuration, OpenAIApi } = require('openai');
+import express from 'express';
+import cors from 'cors';
+import dotenv from 'dotenv';
+import admin from './firebaseAdmin.js';
+import OpenAI from 'openai';
 
 dotenv.config();
 
@@ -10,23 +10,26 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const openai = new OpenAIApi(new Configuration({ apiKey: process.env.OPENAI_API_KEY }));
+// ✅ New OpenAI API client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 app.post('/generate-trip', async (req, res) => {
   const { prompt, formData, user } = req.body;
 
   if (!prompt || !formData || !user?.uid || !user?.email) {
-    return res.status(400).json({ error: 'Missing data' });
+    return res.status(400).json({ error: 'Missing required data (prompt, formData, user)' });
   }
 
   try {
-    const completion = await openai.createChatCompletion({
-      model: 'gpt-4o-mini',
+    const completion = await openai.chat.completions.create({
+      model: 'gpt-4o',
       messages: [{ role: 'user', content: prompt }],
       temperature: 0.7,
     });
 
-    const tripText = completion.data.choices[0].message.content;
+    const tripText = completion.choices[0]?.message?.content;
 
     const docRef = admin.firestore().collection('AiTrips').doc();
     await docRef.set({
@@ -40,10 +43,10 @@ app.post('/generate-trip', async (req, res) => {
 
     res.status(200).json({ tripId: docRef.id, tripText });
   } catch (err) {
-    console.error(err);
-    res.status(500).json({ error: 'Failed to generate trip' });
+    console.error('OpenAI or Firestore error:', err);
+    res.status(500).json({ error: 'Failed to generate trip. Please try again later.' });
   }
 });
 
 const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
