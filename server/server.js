@@ -18,10 +18,7 @@ import restaurantRouter from './routes/restaurantRoutes.js';
 import tripRouter from './routes/tripRoutes.js'; 
 
 
-import OpenAI from 'openai';
-
-const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
+console.log("OPENAI_API_KEY at server start:", process.env.OPENAI_API_KEY);
 const startServer = async () => {
   try {
     await connectDB();

@@ -6,6 +6,7 @@ const router = express.Router();
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+console.log("OPENAI_API_KEY:", process.env.OPENAI_API_KEY);
 
 router.post('/generate-trip', async (req, res) => {
   const { prompt } = req.body;
