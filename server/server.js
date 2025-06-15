@@ -43,7 +43,7 @@ const startServer = async () => {
     app.use("/api/food-orders", foodOrderRouter);
     app.use("/api/restaurant", restaurantRouter);
 
-    // Add your OpenAI trip generation route here
+    // OpenAI trip generation route
     app.post('/generate-trip', async (req, res) => {
       const { prompt, formData, user } = req.body;
 
