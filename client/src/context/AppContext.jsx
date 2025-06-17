@@ -14,17 +14,17 @@ export const AppProvider = ({ children }) => {
   const { user } = useUser();
   const { getToken } = useAuth();
 
-  // Owner role & modal states
   const [isOwner, setIsOwner] = useState(false);
-  const [ownerType, setOwnerType] = useState(null); // "hotelowner", "foodowner", or null
+  const [ownerType, setOwnerType] = useState(null); // hotelowner, foodowner, admin, null
 
-  // Separate modal visibility states for hotel & restaurant registration
   const [showHotelReg, setShowHotelReg] = useState(false);
   const [showRestaurantReg, setShowRestaurantReg] = useState(false);
 
   const [rooms, setRooms] = useState([]);
 
-  // Fetch rooms owned by the user (hotel owner)
+  // 🔍 Derived admin flag (computed from role)
+  const isAdmin = ownerType === "admin";
+
   const fetchRooms = async () => {
     try {
       const token = await getToken();
@@ -41,7 +41,6 @@ export const AppProvider = ({ children }) => {
     }
   };
 
-  // Fetch user info to determine role
   const fetchUser = async () => {
     try {
       const token = await getToken();
@@ -49,14 +48,11 @@ export const AppProvider = ({ children }) => {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (data.success) {
-        // Set owner flags based on role
-        setIsOwner(data.role === "hotelowner" || data.role === "foodowner");
-        setOwnerType(data.role);
+        const role = data.role.toLowerCase();
+        setIsOwner(role === "hotelowner" || role === "foodowner");
+        setOwnerType(role); // admin will be handled via isAdmin
       } else {
-        // Retry after delay if data not successful
-        setTimeout(() => {
-          fetchUser();
-        }, 5000);
+        setTimeout(fetchUser, 5000); // Retry after delay
       }
     } catch (error) {
       toast.error(error.message || "Error fetching user data");
@@ -68,7 +64,7 @@ export const AppProvider = ({ children }) => {
       fetchUser();
       fetchRooms();
     } else {
-      // Reset on logout or no user
+      // Reset when logged out
       setIsOwner(false);
       setOwnerType(null);
       setRooms([]);
@@ -84,6 +80,7 @@ export const AppProvider = ({ children }) => {
     getToken,
     isOwner,
     ownerType,
+    isAdmin, // Expose computed isAdmin
     setIsOwner,
     showHotelReg,
     setShowHotelReg,

@@ -3,12 +3,12 @@ import OpenAI from 'openai';
 
 const router = express.Router();
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-console.log("OPENAI_API_KEY:", process.env.OPENAI_API_KEY);
-
 router.post('/generate-trip', async (req, res) => {
+  // Create the OpenAI client here, so env var is read now
+  const openai = new OpenAI({
+    apiKey: process.env.OPENAI_API_KEY,
+  });
+
   const { prompt } = req.body;
 
   try {

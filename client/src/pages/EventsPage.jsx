@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect, useMemo } from 'react'
+import axios from 'axios'
+import { Link, useNavigate } from 'react-router-dom'
 import {
   FaMapMarkerAlt,
   FaTags,
@@ -7,66 +8,116 @@ import {
   FaCalendarAlt,
   FaSearch,
   FaThList,
-} from 'react-icons/fa';
+  FaPlus,
+} from 'react-icons/fa'
 
-// Example events array (replace with your real data if different)
-const events = Array.from({ length: 24 }, (_, i) => {
-  const types = ['Festival', 'Workshop', 'Adventure', 'Culture', 'Cinema', 'Music'];
-  const month = (i % 12) + 1;
-  const day = (i % 28) + 1;
-  return {
-    id: (i + 1).toString(),
-    name: `Event #${i + 1} in Tozeur`,
-    date: `2024-${month.toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`,
-    description: `This is a detailed description for Event #${i + 1}, held in Tozeur. Come explore culture, music, and unforgettable experiences.`,
-    image: `https://source.unsplash.com/800x500/?tozeur,event,${i + 1}`,
-    type: types[i % types.length],
-    price: i % 4 === 0 ? `${10 + i} TND` : 'Free',
-    location: `Location ${i + 1}, Tozeur`,
-  };
-});
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 const formatDate = (dateStr) =>
   new Date(dateStr).toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'short',
     year: 'numeric',
-  });
+  })
+
+const NO_IMAGE = 'https://via.placeholder.com/400x300?text=No+Image' // fallback image URL
+
+const EVENTS_PER_PAGE = 6
 
 const EventsPage = () => {
-  const [activeTab, setActiveTab] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
-  const [priceFilter, setPriceFilter] = useState('all');
+  const navigate = useNavigate()
 
-  // Get unique categories from events
+  const [events, setEvents] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
+
+  const [activeTab, setActiveTab] = useState('all')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('')
+  const [priceFilter, setPriceFilter] = useState('all')
+
+  const [currentPage, setCurrentPage] = useState(1)
+
+  // Debounce search term input
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedSearchTerm(searchTerm)
+      setCurrentPage(1) // reset page on search change
+    }, 500) // 500ms debounce
+
+    return () => clearTimeout(handler)
+  }, [searchTerm])
+
+  useEffect(() => {
+    const fetchEvents = async () => {
+      try {
+        const res = await axios.get(`${API_BASE_URL}/api/events`)
+        // Map MongoDB _id to id
+        const eventsWithId = res.data.map((e) => ({ ...e, id: e._id || e.id }))
+        setEvents(eventsWithId)
+        setLoading(false)
+      } catch (err) {
+        setError('Failed to load events.')
+        setLoading(false)
+      }
+    }
+    fetchEvents()
+  }, [])
+
   const categories = useMemo(() => {
-    const setCategories = new Set(events.map(e => e.type));
-    return Array.from(setCategories);
-  }, []);
+    const setCategories = new Set(events.map((e) => e.type))
+    return Array.from(setCategories)
+  }, [events])
 
-  // Filter events by active category
   const filteredByCategory = useMemo(() => {
-    if (activeTab === 'all') return events;
-    return events.filter(e => e.type === activeTab);
-  }, [activeTab]);
+    if (activeTab === 'all') return events
+    return events.filter((e) => e.type === activeTab)
+  }, [activeTab, events])
 
-  // Apply search and price filters
-  const finalFilteredEvents = filteredByCategory.filter(e => {
-    const matchesSearch =
-      e.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      e.location.toLowerCase().includes(searchTerm.toLowerCase());
+const filteredBySearchAndPrice = filteredByCategory.filter((e) => {
+  const search = debouncedSearchTerm.toLowerCase()
+  const name = String(e.name ?? '').toLowerCase()
+  const location = String(e.location ?? '').toLowerCase()
+  const price = String(e.price ?? '').toLowerCase()
 
-    const matchesPrice =
-      priceFilter === 'all' ||
-      (priceFilter === 'free' && e.price.toLowerCase() === 'free') ||
-      (priceFilter === 'paid' && e.price.toLowerCase() !== 'free');
+  const matchesSearch = name.includes(search) || location.includes(search)
 
-    return matchesSearch && matchesPrice;
-  });
+  const matchesPrice =
+    priceFilter === 'all' ||
+    (priceFilter === 'free' && price === 'free') ||
+    (priceFilter === 'paid' && price !== 'free')
+
+  return matchesSearch && matchesPrice
+})
+
+
+  // Pagination
+  const totalPages = Math.ceil(filteredBySearchAndPrice.length / EVENTS_PER_PAGE)
+
+  const paginatedEvents = filteredBySearchAndPrice.slice(
+    (currentPage - 1) * EVENTS_PER_PAGE,
+    currentPage * EVENTS_PER_PAGE
+  )
+
+  const handleImageError = (e) => {
+    e.target.src = NO_IMAGE
+  }
+
+  if (loading) return <p className="text-center mt-10">Loading events...</p>
+  if (error) return <p className="text-center mt-10 text-red-600">{error}</p>
 
   return (
     <div className="pt-20 px-4 md:px-6 lg:px-10 container mx-auto max-w-7xl">
-      <h1 className="text-3xl font-bold text-center mb-8">Explore Events in Tozeur</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold text-center flex-1">Explore Events in Tozeur</h1>
+        <button
+          onClick={() => navigate('/events/new')}
+          className="ml-4 flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 transition"
+          aria-label="Create new event"
+        >
+          <FaPlus /> Create New Event
+        </button>
+      </div>
 
       {/* Category Tabs */}
       <div className="flex justify-center gap-4 mb-6 flex-wrap">
@@ -76,10 +127,11 @@ const EventsPage = () => {
             activeTab === 'all' ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-700'
           }`}
           title="All Events"
+          aria-pressed={activeTab === 'all'}
         >
           <FaThList /> All
         </button>
-        {categories.map(category => (
+        {categories.map((category) => (
           <button
             key={category}
             onClick={() => setActiveTab(category)}
@@ -87,6 +139,7 @@ const EventsPage = () => {
               activeTab === category ? 'bg-teal-600 text-white' : 'bg-gray-200 text-gray-700'
             }`}
             title={`Filter by ${category}`}
+            aria-pressed={activeTab === category}
           >
             <FaTags /> {category}
           </button>
@@ -102,14 +155,16 @@ const EventsPage = () => {
             placeholder="Search by name or location..."
             className="w-full outline-none"
             value={searchTerm}
-            onChange={e => setSearchTerm(e.target.value)}
+            onChange={(e) => setSearchTerm(e.target.value)}
+            aria-label="Search events"
           />
         </div>
 
         <select
           className="w-full md:w-1/3 border rounded px-3 py-2 shadow-sm"
           value={priceFilter}
-          onChange={e => setPriceFilter(e.target.value)}
+          onChange={(e) => setPriceFilter(e.target.value)}
+          aria-label="Filter by price"
         >
           <option value="all">All Prices</option>
           <option value="free">Free</option>
@@ -118,11 +173,11 @@ const EventsPage = () => {
       </div>
 
       {/* Events Grid */}
-      {finalFilteredEvents.length === 0 ? (
+      {paginatedEvents.length === 0 ? (
         <p className="text-center text-gray-600">No events match your filters.</p>
       ) : (
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {finalFilteredEvents.map(event => (
+          {paginatedEvents.map((event) => (
             <Link
               to={`/events/${event.id}`}
               key={event.id}
@@ -131,8 +186,9 @@ const EventsPage = () => {
             >
               <div className="relative h-48 overflow-hidden">
                 <img
-                  src={event.image}
+                  src={event.image || NO_IMAGE}
                   alt={event.name}
+                  onError={handleImageError}
                   className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-white">
@@ -156,8 +212,33 @@ const EventsPage = () => {
           ))}
         </div>
       )}
-    </div>
-  );
-};
 
-export default EventsPage;
+      {/* Pagination Controls */}
+      {totalPages > 1 && (
+        <div className="flex justify-center items-center gap-4 mt-8">
+          <button
+            disabled={currentPage === 1}
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            className="px-4 py-2 bg-teal-600 text-white rounded disabled:opacity-50"
+            aria-label="Previous page"
+          >
+            Previous
+          </button>
+          <span>
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            disabled={currentPage === totalPages}
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            className="px-4 py-2 bg-teal-600 text-white rounded disabled:opacity-50"
+            aria-label="Next page"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
+  )
+}
+
+export default EventsPage

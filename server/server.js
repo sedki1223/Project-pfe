@@ -1,6 +1,7 @@
 import dotenv from "dotenv";
 dotenv.config();
-
+console.log("OPENAI_API_KEY:", process.env.OPENAI_API_KEY);
+console.log("OPENAI_API_KEY at server start:", process.env.OPENAI_API_KEY);
 import express from "express";
 import cors from "cors";
 import connectDB from "./configs/db.js";
@@ -16,9 +17,12 @@ import bookingRouter from "./routes/bookingRoutes.js";
 import foodOrderRouter from "./routes/foodOrderRoutes.js";
 import restaurantRouter from './routes/restaurantRoutes.js';
 import tripRouter from './routes/tripRoutes.js'; 
+import transportRoutes from './routes/transportRoutes.js'
+import eventRoutes from './routes/eventsRoutes.js'
+import adminRoutes from './routes/adminRoutes.js'
+import reservationRoutes from './routes/reservationRoutes.js'
 
 
-console.log("OPENAI_API_KEY at server start:", process.env.OPENAI_API_KEY);
 const startServer = async () => {
   try {
     await connectDB();
@@ -40,12 +44,19 @@ const startServer = async () => {
     app.use("/api/bookings", bookingRouter);
     app.use("/api/food-orders", foodOrderRouter);
     app.use("/api/restaurant", restaurantRouter);
+    app.use('/api/transport', transportRoutes);
+    app.use('/api/events', eventRoutes);
+    app.use('/api/admin', adminRoutes);
+    app.use('/api/reservations', reservationRoutes);
+
     // OpenAI trip generation route
     app.use('/api/generate-trip', tripRouter);
 
+    
+
     app.get("/", (req, res) => res.send("API is working"));
 
-    const PORT = process.env.PORT || 3000;
+    const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
   } catch (err) {
     console.error("❌ Failed to start server:", err);

@@ -1,38 +1,54 @@
 import React, { useState } from "react";
-import transportData from "../data/TransportData"; // make sure this path is correct
+import { useNavigate } from "react-router-dom";
 
 const Transportation = () => {
   const [selectedDestination, setSelectedDestination] = useState("");
   const [selectedDate, setSelectedDate] = useState("");
   const [selectedType, setSelectedType] = useState("All");
   const [selectedTime, setSelectedTime] = useState("");
-  const [filteredData, setFilteredData] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
-  const handleSearch = () => {
+  const navigate = useNavigate();
+
+  const handleSearch = async () => {
     if (!selectedDestination || !selectedDate) {
       alert("Please enter both destination and date.");
       return;
     }
 
-    const filtered = transportData.filter(item => {
-      const destinationMatch = item.destination
-        .toLowerCase()
-        .includes(selectedDestination.toLowerCase());
-      const dateMatch = item.date === selectedDate;
-      const typeMatch = selectedType === "All" || item.type === selectedType;
-      const timeMatch = !selectedTime || item.time === selectedTime;
+    setLoading(true);
+    setError("");
 
-      return destinationMatch && dateMatch && typeMatch && timeMatch;
-    });
+    try {
+      // Build query string with all filters except 'All' type
+      const params = new URLSearchParams();
+      params.append("destination", selectedDestination);
+      params.append("date", selectedDate);
+      if (selectedType !== "All") params.append("type", selectedType);
+      if (selectedTime) params.append("time", selectedTime);
 
-    setFilteredData(filtered);
+      // *** Fix API URL: use /api/transport (not /api/transportation) ***
+      const response = await fetch(`/api/transport?${params.toString()}`);
+
+      if (!response.ok) {
+        throw new Error("Failed to fetch transportation options");
+      }
+
+      const data = await response.json();
+
+      // Navigate to results page passing query params (better for reload)
+      navigate(`/transport/results?${params.toString()}`);
+    } catch (err) {
+      setError(err.message || "Something went wrong");
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
     <div className="px-4 md:px-20 mt-32 mb-20 min-h-screen">
-      <h1 className="text-4xl font-bold text-center mb-10">
-        Transportation Finder 🚍
-      </h1>
+      <h1 className="text-4xl font-bold text-center mb-10">Transportation Finder 🚍</h1>
 
       {/* Search Panel */}
       <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
@@ -74,39 +90,17 @@ const Transportation = () => {
       <div className="text-center mb-16">
         <button
           onClick={handleSearch}
-          className="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold shadow-md hover:bg-blue-700 transition-all duration-300"
+          disabled={loading}
+          className={`${
+            loading ? "bg-gray-400 cursor-not-allowed" : "bg-blue-600 hover:bg-blue-700"
+          } text-white px-8 py-3 rounded-lg text-lg font-semibold shadow-md transition-all duration-300`}
         >
-          Search Transport
+          {loading ? "Searching..." : "Search Transport"}
         </button>
       </div>
 
-      {/* Results */}
-      {filteredData.length > 0 ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredData.map((item, idx) => (
-            <div
-              key={idx}
-              className="border rounded-xl p-5 shadow-lg bg-white hover:scale-105 transition-transform"
-            >
-              <h2 className="text-xl font-bold mb-1">{item.type}</h2>
-              <p className="text-gray-700 mb-1">
-                <strong>Destination:</strong> {item.destination}
-              </p>
-              <p className="text-gray-700 mb-1">
-                <strong>Date:</strong> {item.date}
-              </p>
-              <p className="text-gray-700 mb-1">
-                <strong>Time:</strong> {item.time}
-              </p>
-              <p className="text-gray-700">
-                <strong>Price:</strong> ${item.price}
-              </p>
-            </div>
-          ))}
-        </div>
-      ) : (
-        <p className="text-center text-gray-600">No transport options found. Try different filters.</p>
-      )}
+      {/* Error Message */}
+      {error && <p className="text-center text-red-600 font-semibold mb-4">{error}</p>}
     </div>
   );
 };

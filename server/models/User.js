@@ -18,7 +18,7 @@ const userSchema = new mongoose.Schema({
   },
   role: {
     type: String,
-    enum: ["user", "hotelOwner", "foodOwner"],
+    enum: ["user", "hotelOwner", "foodOwner","admin"],
     default: "user",
   },
   recentlyUsedHotels: [{

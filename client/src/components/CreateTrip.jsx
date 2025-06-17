@@ -89,44 +89,41 @@ const CreateTrip = () => {
     }
   };
 
-  const OnGenerateTrip = async () => {
-    if (!user) {
-      setOpenDialog(true);
-      return;
-    }
+  const onGenerateTrip = async () => {
+  setLoading(true);
+  const loadingToastId = toast.loading("Generating your trip...");
 
-    const { lookingFor, days, budget, travelers } = formData;
+  const { lookingFor, days, budget, travelers } = formData;
 
-    if (!lookingFor || !days || !budget || !travelers) {
-      toast.error("Please fill in all the fields!");
-      return;
-    }
+  const FINAL_PROMPT = `Plan a trip for someone interested in ${lookingFor}, staying ${days} days, with a ${budget?.title} budget, traveling as ${travelers?.title}.`;
 
-    setLoading(true);
-    const loadingToastId = toast.loading("Generating your trip plan...");
+  try {
+    const response = await axios.post('http://localhost:5000/api/generate-trip', { prompt: FINAL_PROMPT });
 
-    const FINAL_PROMPT = `Plan a trip for someone interested in ${lookingFor}, staying ${days} days, with a ${budget.title} budget, traveling as ${travelers.title}.`;
-
-    try {
-      // IMPORTANT: Call your backend API route here, NOT OpenAI directly!
-      const response = await axios.post('/api/generate-trip', {
-        prompt: FINAL_PROMPT,
-      });
-
+    if (response.data && response.data.tripPlan) {
       const aiText = response.data.tripPlan;
-
       toast.dismiss(loadingToastId);
       toast.success("Trip generated successfully!");
-
       await SaveAiTrip(aiText);
-    } catch (error) {
-      toast.dismiss(loadingToastId);
-      toast.error("Something went wrong while generating the trip!");
-      console.error("Trip generation error:", error);
-    } finally {
-      setLoading(false);
+    } else {
+      throw new Error("Invalid response data from API");
     }
-  };
+  } catch (error) {
+    toast.dismiss(loadingToastId);
+    toast.error("Something went wrong while generating the trip!");
+    if (axios.isAxiosError(error)) {
+      console.error("Trip generation error status:", error.response?.status);
+      console.error("Trip generation error data:", error.response?.data);
+      console.error("Trip generation error message:", error.message);
+    } else {
+      console.error("Trip generation unexpected error:", error);
+    }
+  } finally {
+    setLoading(false);
+  }
+};
+
+
 
   const SaveAiTrip = async (tripData) => {
     const docId = Date.now().toString();
@@ -224,7 +221,7 @@ const CreateTrip = () => {
 
         {/* Generate Button */}
         <button
-          onClick={OnGenerateTrip}
+          onClick={onGenerateTrip}
           disabled={loading}
           className="w-full bg-blue-600 text-white py-4 rounded-xl font-bold mt-10 hover:bg-blue-700 transition flex justify-center items-center gap-2"
         >
