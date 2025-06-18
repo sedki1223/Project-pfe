@@ -89,7 +89,7 @@ const CreateTrip = () => {
     }
   };
 
-  const onGenerateTrip = async () => {
+const onGenerateTrip = async () => {
   setLoading(true);
   const loadingToastId = toast.loading("Generating your trip...");
 
@@ -100,8 +100,14 @@ const CreateTrip = () => {
   try {
     const response = await axios.post('http://localhost:5000/api/generate-trip', { prompt: FINAL_PROMPT });
 
-    if (response.data && response.data.tripPlan) {
-      const aiText = response.data.tripPlan;
+    console.log("API response:", response.data); // for debugging
+
+    if (
+      response.data &&
+      typeof response.data.reply === 'string' &&
+      response.data.itinerary && typeof response.data.itinerary === 'object'
+    ) {
+      const aiText = response.data.reply; // Or you can save entire itinerary if you want
       toast.dismiss(loadingToastId);
       toast.success("Trip generated successfully!");
       await SaveAiTrip(aiText);
@@ -122,6 +128,7 @@ const CreateTrip = () => {
     setLoading(false);
   }
 };
+
 
 
 

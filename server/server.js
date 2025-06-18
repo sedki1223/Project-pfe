@@ -1,7 +1,5 @@
 import dotenv from "dotenv";
 dotenv.config();
-console.log("OPENAI_API_KEY:", process.env.OPENAI_API_KEY);
-console.log("OPENAI_API_KEY at server start:", process.env.OPENAI_API_KEY);
 import express from "express";
 import cors from "cors";
 import connectDB from "./configs/db.js";
@@ -51,6 +49,7 @@ const startServer = async () => {
 
     // OpenAI trip generation route
     app.use('/api/generate-trip', tripRouter);
+    
 
     
 

@@ -1,33 +1,52 @@
-import { GetPlaceDetails } from '@/service/GlobalApi';
 import React, { useEffect, useState } from 'react';
 import { FaShare } from 'react-icons/fa';
 
-const PHOTO_REF_URL = `https://maps.googleapis.com/maps/api/place/photo?maxwidth=1000&maxheight=1000&photoreference={NAME}&key=${import.meta.env.VITE_GOOGLE_API_KEY}`;
+const FALLBACK_IMAGE_URL = '/fallback-image.jpg'; // Make sure this image exists in your public folder
+
+const UNSPLASH_ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY;
+
+async function searchPhotos(query) {
+  const response = await fetch(
+    `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1`,
+    {
+      headers: {
+        Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`,
+      },
+    }
+  );
+  if (!response.ok) throw new Error('Unsplash API error');
+  const data = await response.json();
+  return data.results;
+}
 
 function InfoSection({ trip }) {
-  const [photoUrl, setPhotoUrl] = useState();
+  const [photoUrl, setPhotoUrl] = useState(FALLBACK_IMAGE_URL);
 
   useEffect(() => {
     let isMounted = true;
 
-    const fetchPlacePhoto = async () => {
+    const fetchPhoto = async () => {
       try {
-        const data = { textQuery: trip.userSelection.lookingFor };
-        const result = await GetPlaceDetails(data);
-        const photos = result?.data?.places?.[0]?.photos;
-        const photoName = photos && photos.length > 0 ? photos[0].photoReference || photos[0].name : null;
-        if (photoName && isMounted) {
-          const url = PHOTO_REF_URL.replace('{NAME}', photoName);
-          setPhotoUrl(url);
+        const query = trip?.userSelection?.lookingFor;
+        if (!query) {
+          setPhotoUrl(FALLBACK_IMAGE_URL);
+          return;
+        }
+
+        const photos = await searchPhotos(query);
+
+        if (photos.length > 0 && photos[0]?.urls?.regular) {
+          if (isMounted) setPhotoUrl(photos[0].urls.regular);
+        } else {
+          if (isMounted) setPhotoUrl(FALLBACK_IMAGE_URL);
         }
       } catch (error) {
-        console.error('Error fetching place photo:', error);
+        console.error('Error fetching Unsplash photo:', error);
+        if (isMounted) setPhotoUrl(FALLBACK_IMAGE_URL);
       }
     };
 
-    if (trip?.userSelection?.lookingFor) {
-      fetchPlacePhoto();
-    }
+    fetchPhoto();
 
     return () => {
       isMounted = false;
@@ -36,22 +55,32 @@ function InfoSection({ trip }) {
 
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({
-        title: `Trip: ${trip.userSelection.lookingFor}`,
-        url: window.location.href,
-      }).catch(console.error);
+      navigator
+        .share({
+          title: `Trip: ${trip?.userSelection?.lookingFor || 'Your Trip'}`,
+          url: window.location.href,
+        })
+        .catch(console.error);
     } else {
       alert('Share not supported on this browser');
     }
   };
 
+  const getTitle = (item) => {
+    if (!item) return 'N/A';
+    if (typeof item === 'string') return item;
+    if (typeof item === 'object' && item.title) return item.title;
+    return 'N/A';
+  };
+
   return (
     <div>
       <img
-        src={photoUrl || '/heroImage.png'}
+        src={photoUrl}
         className="h-[340px] w-full object-cover rounded"
-        alt="Trip Location"
+        alt={`Trip Location: ${trip?.userSelection?.lookingFor || ''}`}
       />
+
       <div className="flex justify-between items-center">
         <div className="my-5 flex flex-col gap-2">
           <h2 className="font-bold text-2xl">{trip?.userSelection?.lookingFor || 'Your Trip'}</h2>
@@ -60,10 +89,10 @@ function InfoSection({ trip }) {
               📅 {trip?.userSelection?.days || 0} Days
             </span>
             <span className="p-1 px-3 bg-gray-200 rounded-full text-gray-500 text-xs md:text-md">
-              💰 {trip?.userSelection?.budget?.title || 'N/A'} Budget
+              💰 {getTitle(trip?.userSelection?.budget)}
             </span>
             <span className="p-1 px-3 bg-gray-200 rounded-full text-gray-500 text-xs md:text-md">
-              ✈️ {trip?.userSelection?.travelers?.title || 'N/A'} Travelers
+              ✈️ {getTitle(trip?.userSelection?.travelers)}
             </span>
           </div>
         </div>

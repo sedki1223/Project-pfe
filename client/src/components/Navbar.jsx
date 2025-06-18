@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { assets } from "../assets/assets";
-import { useClerk, UserButton } from "@clerk/clerk-react";
+import { useClerk, useUser } from "@clerk/clerk-react";
 import { useAppContext } from "@/context/AppContext";
 
 const Navbar = () => {
@@ -17,40 +17,34 @@ const Navbar = () => {
 
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
 
-  const { openSignIn } = useClerk();
+  const { openSignIn, signOut } = useClerk();
+  const { user } = useUser();
+  const navigate = useNavigate();
   const location = useLocation();
 
   const {
-    user,
     isOwner,
     ownerType,
     setShowHotelReg,
-    setShowRestaurantReg, // updated here
+    setShowRestaurantReg,
   } = useAppContext();
 
   useEffect(() => {
-    if (location.pathname !== "/") setIsScrolled(true);
-    else setIsScrolled(false);
-
+    setIsScrolled(location.pathname !== "/" || window.scrollY > 10);
     const handleScroll = () => setIsScrolled(window.scrollY > 10);
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
 
-  const openHotelModal = () => {
-    setShowHotelReg(true);
-  };
+  const openHotelModal = () => setShowHotelReg(true);
+  const openRestaurantModal = () => setShowRestaurantReg(true);
 
-  const openRestaurantModal = () => {
-    setShowRestaurantReg(true);
-  };
+  const toggleUserDropdown = () => setShowUserDropdown((prev) => !prev);
 
-  const handleMenuKeyDown = (e) => {
-    if (e.key === "Enter" || e.key === " ") {
-      e.preventDefault();
-      setIsMenuOpen(!isMenuOpen);
-    }
+  const handleSignOut = () => {
+    signOut(() => navigate("/"));
   };
 
   return (
@@ -70,7 +64,7 @@ const Navbar = () => {
         />
       </Link>
 
-      {/* Desktop navigation */}
+      {/* Desktop nav */}
       <div className="hidden md:flex items-center gap-4 lg:gap-8">
         {navLinks.map((link, i) => (
           <Link
@@ -89,7 +83,7 @@ const Navbar = () => {
           </Link>
         ))}
 
-        {/* Promote or Dashboard Button */}
+        {/* Promote or Dashboard */}
         {user && !isOwner && (
           <button
             onClick={openHotelModal}
@@ -117,14 +111,52 @@ const Navbar = () => {
         )}
       </div>
 
-      {/* Right side login or user menu */}
-      <div className="hidden md:flex items-center gap-4">
+      {/* Right side: Login or User Dropdown */}
+      <div className="hidden md:flex items-center gap-4 relative">
         {user ? (
-          <UserButton />
+          <div className="relative">
+            <img
+              src={user.imageUrl}
+              alt="avatar"
+              className="w-10 h-10 rounded-full cursor-pointer"
+              onClick={toggleUserDropdown}
+            />
+            {showUserDropdown && (
+              <div className="absolute right-0 top-12 bg-white border shadow-md rounded-md w-48 z-50">
+                <Link
+                  to="/my-bookings"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100"
+                  onClick={() => setShowUserDropdown(false)}
+                >
+                  My Bookings
+                </Link>
+                <Link
+                  to="/my-orders"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100"
+                  onClick={() => setShowUserDropdown(false)}
+                >
+                  My Orders
+                </Link>
+                <a
+                  href="/user"
+                  className="block px-4 py-2 text-sm hover:bg-gray-100"
+                  onClick={() => setShowUserDropdown(false)}
+                >
+                  Manage Account
+                </a>
+                <button
+                  onClick={handleSignOut}
+                  className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
+                >
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
         ) : (
           <button
             onClick={openSignIn}
-            className="bg-black text-white px-8 py-2.5 rounded-full ml-4 transition-all duration-500"
+            className="bg-black text-white px-8 py-2.5 rounded-full"
           >
             Login
           </button>
@@ -133,18 +165,54 @@ const Navbar = () => {
 
       {/* Mobile menu toggle */}
       <div className="flex items-center gap-3 md:hidden">
-        {user && <UserButton />}
+        {user && (
+          <img
+            src={user.imageUrl}
+            alt="avatar"
+            className="w-9 h-9 rounded-full"
+            onClick={toggleUserDropdown}
+          />
+        )}
         <img
           onClick={() => setIsMenuOpen(!isMenuOpen)}
-          onKeyDown={handleMenuKeyDown}
-          role="button"
-          tabIndex={0}
-          aria-label={isMenuOpen ? "Close menu" : "Open menu"}
           src={assets.menuIcon}
           alt="menu"
           className={`${isScrolled ? "invert" : ""} h-4`}
         />
       </div>
+
+      {/* Mobile dropdown user menu */}
+      {showUserDropdown && (
+        <div className="absolute top-16 right-4 bg-white border shadow-md rounded-md w-48 z-50 md:hidden">
+          <Link
+            to="/my-bookings"
+            className="block px-4 py-2 text-sm hover:bg-gray-100"
+            onClick={() => setShowUserDropdown(false)}
+          >
+            My Bookings
+          </Link>
+          <Link
+            to="/my-orders"
+            className="block px-4 py-2 text-sm hover:bg-gray-100"
+            onClick={() => setShowUserDropdown(false)}
+          >
+            My Orders
+          </Link>
+          <a
+            href="/user"
+            className="block px-4 py-2 text-sm hover:bg-gray-100"
+            onClick={() => setShowUserDropdown(false)}
+          >
+            Manage Account
+          </a>
+          <button
+            onClick={handleSignOut}
+            className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
+          >
+            Sign Out
+          </button>
+        </div>
+      )}
 
       {/* Mobile menu */}
       <div
@@ -155,7 +223,6 @@ const Navbar = () => {
         <button
           className="absolute top-4 right-4"
           onClick={() => setIsMenuOpen(false)}
-          aria-label="Close menu"
         >
           <img src={assets.closeIcon} alt="close-menu" className="h-6.5" />
         </button>
@@ -171,7 +238,6 @@ const Navbar = () => {
           </Link>
         ))}
 
-        {/* Promote or Dashboard Button */}
         {user && !isOwner && (
           <button
             onClick={() => {

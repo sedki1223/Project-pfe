@@ -21,6 +21,7 @@
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",
     "firebase": "^11.7.3",
+    "framer-motion": "^12.18.1",
     "gapi-script": "^1.2.0",
     "lucide-react": "^0.510.0",
     "mime": "^4.0.7",
