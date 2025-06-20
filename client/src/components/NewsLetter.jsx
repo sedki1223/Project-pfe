@@ -1,23 +1,39 @@
-import React from 'react'
-import { assets } from '../assets/assets'
-import Title from './Title'
+import React from 'react';
+import { assets } from '../assets/assets';
+import Title from './Title';
 
 const NewsLetter = () => {
   return (
-        <div className="flex flex-col items-center  max-w-5xl lg:w-full rounded-2xl px-4 py-12 md:py-16 mx-2 lg:mx-auto my-30 bg-gray-900 text-white">
-            
+    <div className="flex flex-col items-center px-4 py-16 md:py-20 bg-gradient-to-br from-[#b45309] via-[#7c3aed] to-[#111827] text-white rounded-2xl max-w-5xl mx-auto my-24">
+      {/* Title */}
+      <Title
+        title="📬 Stay Inspired"
+        subTitle="Join our newsletter and be the first to discover new events, exclusive offers, and trip inspiration."
+      />
 
-            <Title title="stay Inspired" subTitle="Join our newsletter and be the first to discover new events, exclusive offers,and trip inspiration"/>
-            <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-6">
-                <input type="text" className="bg-white/10 px-4 py-2.5 border border-white/20 rounded outline-none max-w-66 w-full" placeholder="Enter your email" />
-                <button className="flex items-center justify-center gap-2 group bg-black px-4 md:px-7 py-2.5 rounded active:scale-95 transition-all">Subscribe
-                    <img src={assets.arrowIcon} alt="arrow.icon" className='w-3.5 invert
-                    group-hover:translate-x-1 transition-all' />
-                </button>
-            </div>
-            <p className="text-gray-500 mt-6 text-xs text-center">By subscribing, you agree to our Privacy Policy and consent to receive updates.</p>
-        </div>
-  )
-}
+      {/* Input & Button */}
+      <div className="flex flex-col md:flex-row items-center justify-center gap-4 mt-8 w-full max-w-xl">
+        <input
+          type="email"
+          placeholder="Enter your email"
+          className="bg-white/10 px-5 py-3 border border-white/20 rounded-md outline-none w-full text-sm placeholder-white/70 focus:ring-2 focus:ring-white/30 transition-all"
+        />
+        <button className="flex items-center justify-center gap-2 group bg-white text-black font-semibold px-6 py-3 rounded-md hover:bg-gray-100 transition-all active:scale-95">
+          Subscribe
+          <img
+            src={assets.arrowIcon}
+            alt="arrow icon"
+            className="w-4 group-hover:translate-x-1 transition-transform invert"
+          />
+        </button>
+      </div>
 
-export default NewsLetter
+      {/* Terms */}
+      <p className="text-white/70 mt-6 text-xs text-center max-w-md">
+        By subscribing, you agree to our Privacy Policy and consent to receive occasional updates from VisitTozeur.
+      </p>
+    </div>
+  );
+};
+
+export default NewsLetter;

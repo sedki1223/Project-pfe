@@ -1,39 +1,114 @@
-import React from 'react';
-import HotelCard from './HotelCard';
-import { useNavigate } from 'react-router-dom';
-import Title from './Title';
-import { useAppContext } from '@/context/AppContext'; // ✅ Import the context
+import React, { useEffect, useState } from 'react'
+import Title from './Title'
+import { useNavigate } from 'react-router-dom'
+import axios from 'axios'
+
+const NO_IMAGE = 'https://via.placeholder.com/400x300?text=No+Image'
 
 const FeaturedDestination = () => {
-  const { rooms } = useAppContext();
-  const navigate = useNavigate(); // ✅ This is separate from context
+  const navigate = useNavigate()
+  const [rooms, setRooms] = useState([])
+  const [loading, setLoading] = useState(true)
 
-  if (rooms.length === 0) return null;
+  useEffect(() => {
+    const fetchRooms = async () => {
+      try {
+        const res = await axios.get('http://localhost:5000/api/rooms') // adjust endpoint if needed
+        setRooms(res.data.rooms || res.data) // safety fallback
+      } catch (err) {
+        console.error('Error fetching rooms:', err)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchRooms()
+  }, [])
+
+  if (loading) {
+    return (
+      <div className="bg-white px-6 md:px-16 lg:px-24 py-20 min-h-[400px]">
+        <Title
+          title="🏨 Featured Hotels in Tozeur"
+          subTitle="Handpicked stays that capture the spirit of the oasis. From kasbah-style resorts to cozy desert retreats."
+        />
+        <p className="text-center mt-12 text-gray-700">Loading hotels...</p>
+      </div>
+    )
+  }
+
+  if (rooms.length === 0) return null
+
+  const handleImageError = (e) => {
+    e.target.src = NO_IMAGE
+  }
 
   return (
-    <div className='flex flex-col items-center px-6 md:px-16 lg:px-24 bg-slate-50 py-20'>
+    <div className="bg-white flex flex-col items-center px-6 md:px-16 lg:px-24 py-20 min-h-[600px]">
+      {/* Section Title */}
       <Title
-        title='Featured Hotels'
-        subTitle='Discover our handpicked selection of exceptional properties around our beautiful city, offering unparalleled luxury and unforgettable experiences.'
+        title="🏨 Featured Hotels in Tozeur"
+        subTitle="Handpicked stays that capture the spirit of the oasis. From kasbah-style resorts to cozy desert retreats."
       />
 
-      <div className='flex flex-wrap items-center justify-center gap-6 mt-20'>
-        {rooms.slice(0, 4).map((room, index) => (
-          <HotelCard key={room._id} room={room} index={index} />
+      {/* Rooms Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8 mt-16 w-full max-w-7xl">
+        {rooms.slice(0, 3).map((room) => (
+          <div
+            key={room._id}
+            className="bg-white rounded-xl shadow-lg p-5 flex flex-col justify-between hover:shadow-2xl transition-shadow duration-300"
+          >
+            {/* Image */}
+            <img
+              src={room.images?.[0] || NO_IMAGE}
+              alt={room.name}
+              onError={handleImageError}
+              className="rounded-lg w-full h-48 object-cover mb-5"
+            />
+
+            {/* Room Name */}
+            <h3 className="font-playfair text-2xl font-semibold text-gray-900 mb-3">
+              {room.name}
+            </h3>
+
+            {/* Optional Description (if you have one, otherwise remove or add amenities or empty) */}
+            {room.description && (
+              <p className="text-sm text-gray-700 mb-3">{room.description}</p>
+            )}
+
+            {/* Price */}
+            <p className="text-xs text-gray-500 mb-2">
+              Price: <span className="font-semibold text-amber-700">${room.price.toFixed(2)}</span>
+            </p>
+
+            {/* Book Now Button */}
+            <button
+              onClick={() => {
+                navigate(`/rooms/${room._id}`)
+                window.scrollTo(0, 0)
+              }}
+              className="mt-3 px-6 py-3 bg-amber-600 hover:bg-amber-700 text-white rounded-lg font-semibold transition"
+            >
+              Book Now
+            </button>
+          </div>
         ))}
       </div>
 
-      <button
-        onClick={() => {
-          navigate('/rooms');
-          scrollTo(0, 0);
-        }}
-        className='my-16 px-4 py-2 text-sm font-medium border border-gray-300 rounded bg-white hover:bg-gray-50 transition-all cursor-pointer'
-      >
-        View all Hotels
-      </button>
+      {/* View All Button */}
+      <div className="flex justify-center mt-20 w-full max-w-7xl">
+        <button
+          onClick={() => {
+            navigate('/rooms')
+            window.scrollTo(0, 0)
+          }}
+          className="px-8 py-3 rounded-lg bg-amber-600 hover:bg-amber-700 text-white font-semibold transition duration-300 shadow-lg"
+        >
+          View All Hotels
+        </button>
+      </div>
     </div>
-  );
-};
+  )
+}
 
-export default FeaturedDestination;
+export default FeaturedDestination

@@ -1,8 +1,9 @@
-import React, { useMemo, useState } from 'react';
-import { assets, dishesDummyData } from '../assets/assets'; // your updated dishesDummyData here
+import React, { useMemo, useState, useEffect } from 'react';
+import { assets } from '../assets/assets';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import StarRating from '../components/StarRating';
 import { useAppContext } from '@/context/AppContext';
+import axios from 'axios';
 
 const CheckBox = ({ label, selected = false, onChange = () => {} }) => (
   <label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
@@ -32,7 +33,7 @@ const RadioButton = ({ label, selected = false, onChange = () => {} }) => (
 const AllFoods = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
-  const { currency = '$' } = useAppContext(); // fallback to $ if not provided
+  const { currency = '$' } = useAppContext();
 
   const [openFilters, setOpenFilters] = useState(false);
   const [selectedFilters, setSelectedFilters] = useState({
@@ -40,16 +41,35 @@ const AllFoods = () => {
     priceRange: [],
   });
   const [selectedSortOption, setSelectedSortOption] = useState('');
+  const [dishes, setDishes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  // Updated dish types from your data
   const dishTypes = ['Appetizer', 'Main Course', 'Dessert', 'Breakfast'];
-
-  // Price ranges - matches pricePerServing range
-  const priceRanges = [`${currency} 0 to 5`, `${currency} 5 to 10`, `${currency} 10 to 20`, `${currency} 20+`];
-
+  const priceRanges = [
+    `${currency} 0 to 5`,
+    `${currency} 5 to 10`,
+    `${currency} 10 to 20`,
+    `${currency} 20+`,
+  ];
   const sortOptions = ['Price Low to High', 'Price High to Low', 'Newest First'];
 
-  // Helper to update filters
+  useEffect(() => {
+    const fetchDishes = async () => {
+      try {
+        setLoading(true);
+        const res = await axios.get('http://localhost:5000/api/dishes');
+        setDishes(res.data.dishes || []);
+        setError(null);
+      } catch (err) {
+        setError('Error fetching dishes');
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchDishes();
+  }, []);
+
   const handleFilterChange = (checked, value, type) => {
     setSelectedFilters((prev) => {
       const updated = { ...prev };
@@ -71,44 +91,42 @@ const AllFoods = () => {
 
   // Filtering helpers
   const matchesDishType = (dish) =>
-    selectedFilters.dishType.length === 0 || selectedFilters.dishType.includes(dish.dishType);
+    selectedFilters.dishType.length === 0 || selectedFilters.dishType.includes(dish.category);
 
   const matchesPriceRange = (dish) =>
     selectedFilters.priceRange.length === 0 ||
     selectedFilters.priceRange.some((rangeWithCurrency) => {
-      // Remove currency sign before splitting
       const range = rangeWithCurrency.replace(`${currency} `, '');
       if (range.endsWith('+')) {
         const min = Number(range.replace('+', ''));
-        return dish.pricePerServing >= min;
+        return dish.price >= min;
       }
       const [min, max] = range.split(' to ').map(Number);
-      return dish.pricePerServing >= min && dish.pricePerServing <= max;
+      return dish.price >= min && dish.price <= max;
     });
 
   // Sorting function
   const sortDishes = (a, b) => {
-    if (selectedSortOption === 'Price Low to High') return a.pricePerServing - b.pricePerServing;
-    if (selectedSortOption === 'Price High to Low') return b.pricePerServing - a.pricePerServing;
+    if (selectedSortOption === 'Price Low to High') return a.price - b.price;
+    if (selectedSortOption === 'Price High to Low') return b.price - a.price;
     if (selectedSortOption === 'Newest First') return new Date(b.createdAt) - new Date(a.createdAt);
     return 0;
   };
 
-  // Filter by destination query param (restaurant city)
   const destination = searchParams.get('destination') || '';
 
-  // Memoized filtered and sorted dishes list
+  // Filter and sort dishes
   const filteredFoods = useMemo(() => {
-    return dishesDummyData
+    return dishes
       .filter(
         (dish) =>
-          dish.isAvailable && // only available dishes
+          dish.isAvailable &&
           matchesDishType(dish) &&
           matchesPriceRange(dish) &&
           (dish.restaurant?.city?.toLowerCase() || '').includes(destination.toLowerCase())
       )
       .sort(sortDishes);
-  }, [selectedFilters, selectedSortOption, destination, currency]);
+  }, [dishes, selectedFilters, selectedSortOption, destination, currency]);
 
   const clearFilters = () => {
     setSelectedFilters({ dishType: [], priceRange: [] });
@@ -116,9 +134,11 @@ const AllFoods = () => {
     setSearchParams({});
   };
 
+  if (loading) return <p className="text-center mt-20">Loading dishes...</p>;
+  if (error) return <p className="text-center mt-20 text-red-600">{error}</p>;
+
   return (
     <div className="flex flex-col-reverse lg:flex-row items-start justify-between pt-28 md:pt-35 px-4 md:px-16 lg:px-24 xl:px-32">
-      {/* Dish List */}
       <div className="flex-1">
         <div className="flex flex-col items-start text-left">
           <h1 className="font-playfair text-4xl md:text-[40px]">Available Dishes</h1>
@@ -135,20 +155,20 @@ const AllFoods = () => {
               key={dish._id}
               className="flex flex-col md:flex-row items-start py-10 gap-6 border-b border-gray-300 last:pb-32 last:border-0 cursor-pointer"
               onClick={() => {
-                navigate(`/foods/${dish._id}`);
+                navigate(`/dishes/${dish._id}`);
                 scrollTo(0, 0);
               }}
               role="button"
               tabIndex={0}
               onKeyPress={(e) => {
                 if (e.key === 'Enter' || e.key === ' ') {
-                  navigate(`/foods/${dish._id}`);
+                  navigate(`/dishes/${dish._id}`);
                   scrollTo(0, 0);
                 }
               }}
             >
               <img
-                src={dish.images?.[0] || assets.defaultFoodImage}
+                src={dish.image || assets.defaultFoodImage}
                 alt={dish.name}
                 className="max-h-[260px] md:w-1/2 rounded-xl shadow-lg object-cover"
                 onError={(e) => {
@@ -159,7 +179,7 @@ const AllFoods = () => {
                 <p className="text-gray-500">{dish.restaurant?.city}</p>
                 <p className="text-gray-800 text-3xl font-playfair">{dish.name}</p>
                 <div className="flex items-center">
-                  <StarRating rating={dish.rating || 4} /> {/* fallback to 4 stars if rating missing */}
+                  <StarRating rating={4} /> {/* no rating in model, fallback to 4 */}
                   <p className="ml-2">200+ reviews</p>
                 </div>
                 <div className="flex items-center gap-1 text-gray-500 mt-2 text-sm">
@@ -178,7 +198,7 @@ const AllFoods = () => {
                   ))}
                 </div>
                 <p className="text-xl font-medium text-gray-700">
-                  {currency} {dish.pricePerServing}
+                  {currency} {dish.price}
                 </p>
               </div>
             </div>
@@ -186,7 +206,6 @@ const AllFoods = () => {
         )}
       </div>
 
-      {/* Filters */}
       <div className="bg-white w-80 border border-gray-300 text-gray-600 max-lg:mb-8 lg:mt-16">
         <div className="flex items-center justify-between px-5 py-2.5 border-b border-gray-300">
           <p className="text-base font-medium text-gray-800">FILTERS</p>
@@ -205,7 +224,6 @@ const AllFoods = () => {
 
         {openFilters && (
           <div className="p-5 space-y-4">
-            {/* Dish Type Filter */}
             <div>
               <p className="font-semibold mb-1 text-gray-700">Dish Type</p>
               {dishTypes.map((type) => (
@@ -218,7 +236,6 @@ const AllFoods = () => {
               ))}
             </div>
 
-            {/* Price Range Filter */}
             <div>
               <p className="font-semibold mb-1 text-gray-700">Price Range</p>
               {priceRanges.map((range) => (
@@ -231,7 +248,6 @@ const AllFoods = () => {
               ))}
             </div>
 
-            {/* Sorting */}
             <div>
               <p className="font-semibold mb-1 text-gray-700">Sort By</p>
               {sortOptions.map((option) => (

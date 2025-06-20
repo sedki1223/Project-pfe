@@ -352,3 +352,64 @@ export const dishesDummyData = [
     __v: 0,
   },
 ];
+export const eventsData = [
+  {
+    id: 'evt001',
+    title: 'Festival of Date Palm',
+    description: 'Celebrate the heritage of Tozeur with music, dance, and local crafts.',
+    location: 'Oasis Square, Tozeur',
+    date: '2025-07-10T18:00:00.000Z',
+    time: '18:00',
+    price: 20,
+    image: '/images/event-date-palm.jpg',
+    attendees: [],
+  },
+  {
+    id: 'evt002',
+    title: 'Desert Music Night',
+    description: 'Enjoy traditional desert music under the stars.',
+    location: 'Al Kabir Park, Tozeur',
+    date: '2025-08-05T20:00:00.000Z',
+    time: '20:00',
+    price: 15,
+    image: '/images/event-music-night.jpg',
+    attendees: [],
+  },
+  {
+    id: 'evt003',
+    title: 'Oasis Art Expo',
+    description: 'Showcasing local artists and craftsmen of Tozeur.',
+    location: 'Art Gallery Center, Tozeur',
+    date: '2025-09-01T10:00:00.000Z',
+    time: '10:00',
+    price: 10,
+    image: '/images/event-art-expo.jpg',
+    attendees: [],
+  },
+];
+export const transportData = [
+  {
+    id: 'trans001',
+    type: 'Taxi',
+    description: 'Available in cities and towns across Tunisia for local and airport transfers.',
+    icon: '/icons/taxi.svg',
+  },
+  {
+    id: 'trans002',
+    type: 'Bus',
+    description: 'Intercity and regional bus services connecting major Tunisian cities.',
+    icon: '/icons/bus.svg',
+  },
+  {
+    id: 'trans003',
+    type: 'Train',
+    description: 'SNCFT rail network linking coastal and inland cities across Tunisia.',
+    icon: '/icons/train.svg',
+  },
+  {
+    id: 'trans004',
+    type: 'Domestic Flights',
+    description: 'Regular flights connecting Tozeur, Tunis, Djerba, and other airports.',
+    icon: '/icons/plane.svg',
+  },
+];

@@ -1,6 +1,6 @@
 import transporter from "../configs/nodeMailer.js";
 import FoodOrder from "../models/FoodOrder.js";
-import Food from "../models/Food.js";
+import Dish from "../models/Dish.js";
 import User from "../models/User.js";
 
 // 🛒 API to create a food order
@@ -10,12 +10,12 @@ export const createFoodOrder = async (req, res) => {
     const { foodId, quantity, deliveryAddress, contactNumber } = req.body;
     const userId = req.user._id;
 
-    const foodItem = await Food.findById(foodId).populate("owner");
-    if (!foodItem) {
-      return res.status(404).json({ success: false, message: "Food item not found" });
+    const dish = await Dish.findById(foodId).populate("owner");
+    if (!dish) {
+      return res.status(404).json({ success: false, message: "Dish not found" });
     }
 
-    const totalPrice = foodItem.price * quantity;
+    const totalPrice = dish.price * quantity;
 
     const newOrder = await FoodOrder.create({
       user: userId,
@@ -39,13 +39,13 @@ export const createFoodOrder = async (req, res) => {
         <p>Thank you for your order!</p>
         <ul>
           <li><strong>Order ID:</strong> ${newOrder._id}</li>
-          <li><strong>Food:</strong> ${foodItem.name}</li>
+          <li><strong>Dish:</strong> ${dish.name}</li>
           <li><strong>Quantity:</strong> ${quantity}</li>
           <li><strong>Total Price:</strong> ${process.env.CURRENCY}${totalPrice}</li>
           <li><strong>Delivery Address:</strong> ${deliveryAddress}</li>
         </ul>
         <p>Your order will be delivered shortly. For any issues, contact us at ${process.env.SUPPORT_EMAIL}.</p>
-      `
+      `,
     };
 
     await transporter.sendMail(mailOptions);
@@ -75,10 +75,10 @@ export const getUserFoodOrders = async (req, res) => {
 // GET /api/foods/vendor-orders
 export const getVendorFoodOrders = async (req, res) => {
   try {
-    const foods = await Food.find({ owner: req.user._id });
+    const dishes = await Dish.find({ owner: req.user._id });
 
-    const foodIds = foods.map(f => f._id);
-    const orders = await FoodOrder.find({ food: { $in: foodIds } })
+    const dishIds = dishes.map(d => d._id);
+    const orders = await FoodOrder.find({ food: { $in: dishIds } })
       .populate("user food")
       .sort({ createdAt: -1 });
 
@@ -98,36 +98,37 @@ export const getVendorFoodOrders = async (req, res) => {
     res.json({ success: false, message: "Failed to get vendor food orders" });
   }
 };
-// Get all foods owned by the logged-in vendor (owner)
+
+// 🍽️ Get all dishes owned by the logged-in vendor (owner)
 export const getVendorFoods = async (req, res) => {
   try {
-    const foods = await Food.find({ owner: req.user._id });
-    res.json({ success: true, foods });
+    const dishes = await Dish.find({ owner: req.user._id });
+    res.json({ success: true, foods: dishes });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to get vendor foods' });
+    res.status(500).json({ success: false, message: "Failed to get vendor dishes" });
   }
 };
 
-// Update food availability (or other editable fields)
+// 🔄 Update dish availability (or other editable fields)
 export const updateFoodAvailability = async (req, res) => {
   try {
     const { id } = req.params;
     const { isAvailable } = req.body;
 
-    const food = await Food.findById(id);
-    if (!food) return res.status(404).json({ success: false, message: 'Food not found' });
+    const dish = await Dish.findById(id);
+    if (!dish) return res.status(404).json({ success: false, message: "Dish not found" });
 
-    if (food.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: 'Unauthorized' });
+    if (dish.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "Unauthorized" });
     }
 
-    food.isAvailable = isAvailable;
-    await food.save();
+    dish.isAvailable = isAvailable;
+    await dish.save();
 
-    res.json({ success: true, message: 'Food availability updated', food });
+    res.json({ success: true, message: "Dish availability updated", food: dish });
   } catch (error) {
     console.error(error);
-    res.status(500).json({ success: false, message: 'Failed to update availability' });
+    res.status(500).json({ success: false, message: "Failed to update availability" });
   }
 };

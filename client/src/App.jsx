@@ -18,7 +18,7 @@ import CreateTrip from './components/CreateTrip';
 import Viewtrip from './pages/ViewTrip';
 import TestPlacesDetails from './components/TestPlacesDetails';
 import EventsPage from './pages/EventsPage';
-import DishDetails from './pages/FoodDetails';
+import DishDetails from './pages/DishDetails';
 import EventDetails from './components/EventDetails';
 import AdminRoute from './components/AdminRoute';
 import AdminDashboard from './components/AdminDashboard';
@@ -57,7 +57,7 @@ const App = () => {
           <Route path="/rooms/:id" element={<RoomDetails />} />
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/my-orders" element={<DeliveryTracking />} />
-          <Route path="/food" element={<AllFoods />} />
+          <Route path="/dish" element={<AllFoods />} />
           <Route path="/about" element={<About />} />
           <Route path="/transportation" element={<Transportation />} />
           <Route path="/aiplanner" element={<AiPlanner />} />
@@ -66,7 +66,7 @@ const App = () => {
           <Route path="/view-trip/:tripId" element={<Viewtrip />} />
           <Route path="/events" element={<EventsPage />} />
           <Route path="/events/:eventId" element={<EventDetails />} />
-          <Route path="/foods/:id" element={<DishDetails />} />
+          <Route path="/dishes/:id" element={<DishDetails />} />
           <Route path="/transport/results" element={<TransportResults />} />
           {/* Hotel Owner Pages (nested routes) */}
           <Route path="/ownerhotel" element={<Layout />}>

@@ -54,3 +54,16 @@ export const getTransports = async (req, res) => {
     res.status(500).json({ error: err.message })
   }
 }
+// controllers/transportController.js
+export const getTransportById = async (req, res) => {
+  try {
+    const { id } = req.params
+    const transport = await Transport.findById(id)
+    if (!transport) {
+      return res.status(404).json({ error: 'Transport option not found' })
+    }
+    res.json(transport)
+  } catch (err) {
+    res.status(500).json({ error: err.message })
+  }
+}

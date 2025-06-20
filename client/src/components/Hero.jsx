@@ -1,48 +1,82 @@
-import React from 'react'
-import { assets } from '../assets/assets'
-import { Navigate } from 'react-router-dom';
+import React from 'react';
+import { assets } from '../assets/assets';
 
 const Hero = () => {
-
-
-
   return (
-    <div className='flex flex-col items-start justify-center px-6 md:px-16 lg:px-24 xl:px-32 text-white bg-[url("/src/assets/heroImage.png")] bg-no-repeat bg-cover bg-center h-screen'>
-      <p className='bg-[#49B9FF]/50 px-3.5 py-1 rounded-full mt-20'>The Ultimate Vacation Experience</p>
-      <h1 className='font-playfair test-2x1 md:text-5x1 md:text-[56px] md:leading-[56px] font-blod md:font-extrablod max-w-x1 mt-4'>Plan Your Perfect Vacation</h1>
-      <p className='max-w-130 mt-2 text-sm md:text-base'>enjoy your stay with us</p>
+    <div
+      className='relative h-screen bg-center bg-cover bg-no-repeat text-white flex items-center'
+      style={{ backgroundImage: `url(${assets.heroImage})` }}
+    >
+      {/* Overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-[#00000077] to-[#00000033]" />
 
-      <form  className='bg-white text-gray-500 rounded-lg px-6 py-4 mt-8 flex flex-col md:flex-row max-md:items-start gap-4 max-md:mx-auto'>
+      {/* Content */}
+      <div className="relative z-10 px-6 md:px-16 lg:px-24 xl:px-32 max-w-7xl w-full">
+        <p className="bg-[#49B9FF]/60 px-4 py-1 rounded-full inline-block text-sm tracking-wide">
+          Discover the Spirit of the Sahara
+        </p>
 
+        <h1 className="text-4xl md:text-5xl lg:text-6xl font-playfair font-extrabold leading-tight mt-4 max-w-3xl">
+          Plan Your Perfect Escape to Tozeur
+        </h1>
 
-            <div>
-                <div className='flex items-center gap-2'>
-                    <img src={assets.calenderIcon} alt="" className='h-4'/>    
-                    <label htmlFor="checkIn">Check in</label>
-                </div>
-                <input id="checkIn" type="date" className=" rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none" />
-            </div>
+        <p className="mt-4 text-base md:text-lg max-w-md text-white/90">
+          Explore desert oases, local cuisine, and unique cultural experiences.
+        </p>
 
-            <div>
-                <div className='flex items-center gap-2'>
-                    <img src={assets.calenderIcon} alt="" className='h-4'/> 
-                    <label htmlFor="checkOut">Check out</label>
-                </div>
-                <input id="checkOut" type="date" className=" rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none" />
-            </div>
+        {/* Form */}
+        <form className="bg-white text-gray-700 rounded-xl px-6 py-5 mt-10 flex flex-col md:flex-row gap-4 shadow-lg max-w-4xl">
+          {/* Check In */}
+          <div className="flex flex-col">
+            <label htmlFor="checkIn" className="flex items-center gap-2 text-sm font-medium">
+              <img src={assets.calenderIcon} alt="" className="h-4" />
+              Check In
+            </label>
+            <input
+              id="checkIn"
+              type="date"
+              className="mt-2 rounded border border-gray-300 px-3 py-2 text-sm outline-none"
+            />
+          </div>
 
-            <div className='flex md:flex-col max-md:gap-2 max-md:items-center'>
-                <label htmlFor="guests">Guests</label>
-                <input min={1} max={4} id="guests" type="number" className=" rounded border border-gray-200 px-3 py-1.5 mt-1.5 text-sm outline-none  max-w-16" placeholder="0" />
-            </div>
+          {/* Check Out */}
+          <div className="flex flex-col">
+            <label htmlFor="checkOut" className="flex items-center gap-2 text-sm font-medium">
+              <img src={assets.calenderIcon} alt="" className="h-4" />
+              Check Out
+            </label>
+            <input
+              id="checkOut"
+              type="date"
+              className="mt-2 rounded border border-gray-300 px-3 py-2 text-sm outline-none"
+            />
+          </div>
 
-            <button className='flex items-center justify-center gap-1 rounded-md bg-black py-3 px-4 text-white my-auto cursor-pointer max-md:w-full max-md:py-1' >
-                <img src={assets.searchIcon} alt="searchIcon" className='h-7'/> 
-                <span>Search</span>
-            </button>
+          {/* Guests */}
+          <div className="flex flex-col">
+            <label htmlFor="guests" className="text-sm font-medium">Guests</label>
+            <input
+              id="guests"
+              type="number"
+              min={1}
+              max={10}
+              className="mt-2 rounded border border-gray-300 px-3 py-2 text-sm outline-none w-20"
+              placeholder="2"
+            />
+          </div>
+
+          {/* Search Button */}
+          <button
+            type="submit"
+            className="flex items-center justify-center gap-2 rounded-md bg-[#d97706] hover:bg-[#b45309] text-white px-6 py-3 font-semibold w-full md:w-auto mt-2 md:mt-6"
+          >
+            <img src={assets.searchIcon} alt="search icon" className="h-5" />
+            <span>Search</span>
+          </button>
         </form>
+      </div>
     </div>
-  )
-}
+  );
+};
 
-export default Hero
+export default Hero;

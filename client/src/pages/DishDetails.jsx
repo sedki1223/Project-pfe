@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import StarRating from '../components/StarRating';
 import toast from 'react-hot-toast';
 import { useAuth } from '@clerk/clerk-react';  // Clerk auth hook
-import { assets, dishesDummyData } from '../assets/assets'; // import your dummy data here
+import { assets } from '../assets/assets';
 
 const DishDetails = () => {
   const { id } = useParams();
@@ -11,26 +11,42 @@ const DishDetails = () => {
   const [mainImage, setMainImage] = useState('');
   const [quantity, setQuantity] = useState(1);
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
 
   const { getToken } = useAuth();
 
   useEffect(() => {
-    // Find dish by _id matching id from URL params
-    const foundDish = dishesDummyData.find((item) => item._id === id);
+    const fetchDish = async () => {
+      try {
+        setFetching(true);
+        const res = await fetch(`http://localhost:5000/api/dishes/${id}`);
+        const data = await res.json();
 
-    if (foundDish) {
-      setDish({
-        ...foundDish,
-        images: foundDish.images && foundDish.images.length > 0 ? foundDish.images : [],
-        chef: {
-          name: 'Chef Amira',
-          image: '',
-        },
-        reviews: Math.floor(Math.random() * 100),
-      });
+        if (res.ok && data.success) {
+          const dishData = data.dish;
 
-      setMainImage(foundDish.images && foundDish.images.length > 0 ? foundDish.images[0] : '');
-    }
+          setDish({
+            ...dishData,
+            images: dishData.images && dishData.images.length > 0 ? dishData.images : [],
+            amenities: dishData.amenities || [], // amenities = ingredients
+            restaurant: dishData.restaurant || {},
+            rating: dishData.rating || 4, // fallback rating if any
+            reviews: Math.floor(Math.random() * 100), // mock reviews count
+          });
+
+          setMainImage(dishData.images && dishData.images.length > 0 ? dishData.images[0] : '');
+        } else {
+          setDish(null);
+        }
+      } catch (error) {
+        console.error('Fetch dish error:', error);
+        setDish(null);
+      } finally {
+        setFetching(false);
+      }
+    };
+
+    fetchDish();
   }, [id]);
 
   const handleOrder = async (e) => {
@@ -40,7 +56,7 @@ const DishDetails = () => {
     setLoading(true);
 
     try {
-      const token = await getToken({ template: 'your-template-name' }); // replace if needed
+      const token = await getToken({ template: 'your-template-name' }); // adjust your template if needed
 
       const response = await fetch('/api/food-orders', {
         method: 'POST',
@@ -69,6 +85,7 @@ const DishDetails = () => {
     }
   };
 
+  if (fetching) return <div className='pt-32 text-center text-xl'>Loading dish details...</div>;
   if (!dish) return <div className='pt-32 text-center text-xl'>Dish not found.</div>;
 
   return (
@@ -76,9 +93,12 @@ const DishDetails = () => {
       <div className="max-w-6xl mx-auto bg-white p-8 rounded-lg shadow-lg">
         {/* Main Image */}
         <img
-          src={mainImage}
+          src={mainImage || assets.defaultFoodImage}
           alt={dish.name}
           className="w-full max-h-96 object-cover rounded-lg mb-6"
+          onError={(e) => {
+            e.currentTarget.src = assets.defaultFoodImage;
+          }}
         />
 
         {/* Thumbnails */}
@@ -92,6 +112,9 @@ const DishDetails = () => {
               className={`w-20 h-20 object-cover rounded cursor-pointer border-2 ${
                 mainImage === img ? 'border-primary' : 'border-transparent'
               } hover:border-primary transition-all`}
+              onError={(e) => {
+                e.currentTarget.src = assets.defaultFoodImage;
+              }}
             />
           ))}
         </div>
@@ -101,19 +124,19 @@ const DishDetails = () => {
         <p className="text-gray-700 mb-4">{dish.description}</p>
 
         <div className="flex items-center mb-4">
-          <StarRating rating={4} /> {/* Hardcoded for demo */}
+          <StarRating rating={dish.rating} />
           <span className="ml-2 text-sm text-gray-500">{dish.reviews} reviews</span>
         </div>
 
         <p className="text-lg font-semibold mb-4">
-          Price: ${dish.pricePerServing} per serving
+          Price: ${dish.price.toFixed(2)} per serving
         </p>
 
         {/* Ingredients */}
         <div className="mb-6">
           <h3 className="font-semibold mb-2">Ingredients:</h3>
           <ul className="list-disc list-inside text-gray-600">
-            {dish.ingredients.map((ing, idx) => (
+            {dish.amenities.map((ing, idx) => (
               <li key={idx}>{ing}</li>
             ))}
           </ul>
@@ -122,8 +145,8 @@ const DishDetails = () => {
         {/* Restaurant Info */}
         <div className="mb-6">
           <h3 className="font-semibold">Restaurant:</h3>
-          <p>{dish.restaurant?.name || 'Unknown Restaurant'}</p>
-          <p>{dish.restaurant?.address || 'Address not available'}</p>
+          <p>{dish.restaurant.name || 'Unknown Restaurant'}</p>
+          <p>{dish.restaurant.address || 'Address not available'}</p>
         </div>
 
         {/* Order Form */}

@@ -19,6 +19,8 @@ import transportRoutes from './routes/transportRoutes.js'
 import eventRoutes from './routes/eventsRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import reservationRoutes from './routes/reservationRoutes.js'
+import dishRoutes from "./routes/dishRoutes.js";
+
 
 
 const startServer = async () => {
@@ -39,6 +41,7 @@ const startServer = async () => {
     app.use("/api/user", userRouter);
     app.use("/api/hotel", hotelRouter);
     app.use("/api/rooms", roomRouter);
+    app.use("/api/dishes", dishRoutes);
     app.use("/api/bookings", bookingRouter);
     app.use("/api/food-orders", foodOrderRouter);
     app.use("/api/restaurant", restaurantRouter);
@@ -46,6 +49,7 @@ const startServer = async () => {
     app.use('/api/events', eventRoutes);
     app.use('/api/admin', adminRoutes);
     app.use('/api/reservations', reservationRoutes);
+    
 
     // OpenAI trip generation route
     app.use('/api/generate-trip', tripRouter);

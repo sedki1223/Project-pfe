@@ -15,9 +15,9 @@ import {
   FaUsers,
 } from "react-icons/fa";
 import { useAppContext } from "../context/AppContext";
-import axios from "../api/axiosConfig";
 import toast from "react-hot-toast";
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
 
 // Simple Error Boundary for React 16+
 class ErrorBoundary extends React.Component {
@@ -37,7 +37,10 @@ class ErrorBoundary extends React.Component {
         <div role="alert" className="p-4 text-red-700 bg-red-100 rounded">
           <h2>Something went wrong.</h2>
           <pre>{this.state.error?.toString()}</pre>
-          <button onClick={() => this.setState({ hasError: false, error: null })} className="mt-2 px-4 py-2 bg-teal-600 text-white rounded">
+          <button
+            onClick={() => this.setState({ hasError: false, error: null })}
+            className="mt-2 px-4 py-2 bg-teal-600 text-white rounded"
+          >
             Try Again
           </button>
         </div>
@@ -70,9 +73,7 @@ const EventDetails = () => {
     JSON.parse(localStorage.getItem("sidebarOpen")) ?? false
   );
 
-  const [activeTab, setActiveTab] = useState(
-    localStorage.getItem("activeTab") || "recent"
-  );
+  const [activeTab, setActiveTab] = useState(localStorage.getItem("activeTab") || "recent");
 
   const [mainImage, setMainImage] = useState("");
   const [allEvents, setAllEvents] = useState([]);
@@ -96,18 +97,18 @@ const EventDetails = () => {
   const [showAttendeesModal, setShowAttendeesModal] = useState(false);
 
   // Fetch event details
-    const fetchEvent = async () => {
+  const fetchEvent = async () => {
     setLoadingEvent(true);
     try {
       const token = await getToken();
-      const { data } = await axios.get(`/api/events/${eventId}`, {
+      const { data } = await axios.get(`${API_BASE_URL}/api/events/${eventId}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (data.success) {
-        setEvent(data.event);
+      if (data) {
+        setEvent(data);
         setError(null);
       } else {
-        setError(data.message || "Failed to load event");
+        setError("Failed to load event");
       }
     } catch (err) {
       setError(err.message || "Error fetching event");
@@ -116,21 +117,32 @@ const EventDetails = () => {
     setLoadingEvent(false);
   };
 
+  // Initialize mainImage and likes when event changes
+  useEffect(() => {
+    if (event && event.image) {
+      setMainImage(event.image);
+      setLikesCount(event.likesCount || 0);
+      setLiked(event.userHasLiked || false);
+    }
+  }, [event]);
+
   // Fetch attendees list
   const fetchAttendees = async () => {
     setLoadingAttendees(true);
     try {
       const token = await getToken();
-      const { data } = await axios.get(`/api/events/${eventId}/attendees`, {
+      const { data } = await axios.get(`${API_BASE_URL}/api/events/${eventId}/attendees`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (data.success) {
-        setAttendees(data.attendees);
+      if (data && Array.isArray(data)) {
+        setAttendees(data);
         setError(null);
       } else {
-        setError(data.message || "Failed to load attendees");
+        setAttendees([]);
+        setError("Failed to load attendees");
       }
     } catch (err) {
+      setAttendees([]);
       setError(err.message || "Error fetching attendees");
     }
     setLoadingAttendees(false);
@@ -141,13 +153,13 @@ const EventDetails = () => {
     setLoadingAllEvents(true);
     try {
       const token = await getToken();
-      const { data } = await axios.get("/api/events", {
+      const { data } = await axios.get(`${API_BASE_URL}/api/events`, {
         headers: { Authorization: `Bearer ${token}` },
       });
-      if (data.success) {
-        setAllEvents(data.events);
+      if (data) {
+        setAllEvents(data);
       } else {
-        toast.error(data.message || "Failed to load events");
+        toast.error("Failed to load events");
       }
     } catch (err) {
       toast.error(err.message || "Error fetching events");
@@ -180,22 +192,22 @@ const EventDetails = () => {
     }
   }, [rsvpStatusMessage]);
 
-  // Check if current user has RSVPed
-  const hasRSVPed = user && attendees.some((a) => a.userId === user.id);
+  // Safe check if attendees is an array before some()
+  const hasRSVPed = user && Array.isArray(attendees) && attendees.some((a) => a.userId === user.id);
 
   // Filtered & searched event lists for sidebar
   const sameTopicEvents = allEvents
-    .filter((e) => e.type === event?.type && e.id !== event?.id)
-    .filter((e) => e.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((e) => e.category === event?.category && e._id !== event?._id)
+    .filter((e) => e.title.toLowerCase().includes(searchQuery.toLowerCase()))
     .slice(0, 5);
 
   const otherEvents = allEvents
-    .filter((e) => e.type !== event?.type)
-    .filter((e) => e.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((e) => e.category !== event?.category)
+    .filter((e) => e.title.toLowerCase().includes(searchQuery.toLowerCase()))
     .slice(0, 5);
 
   const recentEvents = [...allEvents]
-    .filter((e) => e.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    .filter((e) => e.title.toLowerCase().includes(searchQuery.toLowerCase()))
     .slice(-5)
     .reverse();
 
@@ -217,13 +229,13 @@ const EventDetails = () => {
       >
         {list.map((ev) => (
           <Link
-            key={ev.id}
-            to={`/events/${ev.id}`}
+            key={ev._id}
+            to={`/events/${ev._id}`}
             className="block bg-gray-100 p-2 rounded hover:bg-gray-200 transition"
             onClick={() => setShowFilters(false)}
             role="listitem"
           >
-            <div className="font-medium">{ev.name}</div>
+            <div className="font-medium">{ev.title}</div>
             <div className="text-sm text-gray-500">{formatDate(ev.date)}</div>
           </Link>
         ))}
@@ -231,7 +243,7 @@ const EventDetails = () => {
     );
   };
 
-  // RSVP handler with aria-live message update
+  // RSVP handler
   const handleRSVP = async () => {
     if (!user) {
       alert("Please log in to RSVP.");
@@ -242,7 +254,7 @@ const EventDetails = () => {
       const token = await getToken();
       if (hasRSVPed) {
         // Cancel RSVP
-        const { data } = await axios.delete(`/api/events/${eventId}/rsvp`, {
+        const { data } = await axios.delete(`${API_BASE_URL}/api/events/${eventId}/rsvp`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (data.success) {
@@ -256,7 +268,7 @@ const EventDetails = () => {
       } else {
         // RSVP
         const { data } = await axios.post(
-          `/api/events/${eventId}/rsvp`,
+          `${API_BASE_URL}/api/events/${eventId}/rsvp`,
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -286,7 +298,7 @@ const EventDetails = () => {
       const token = await getToken();
       if (liked) {
         // Unlike
-        const { data } = await axios.delete(`/api/events/${eventId}/like`, {
+        const { data } = await axios.delete(`${API_BASE_URL}/api/events/${eventId}/like`, {
           headers: { Authorization: `Bearer ${token}` },
         });
         if (data.success) {
@@ -299,7 +311,7 @@ const EventDetails = () => {
       } else {
         // Like
         const { data } = await axios.post(
-          `/api/events/${eventId}/like`,
+          `${API_BASE_URL}/api/events/${eventId}/like`,
           {},
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -319,7 +331,7 @@ const EventDetails = () => {
   // Share handler
   const handleShare = () => {
     if (navigator.share) {
-      navigator.share({ title: event.name, url: window.location.href });
+      navigator.share({ title: event.title, url: window.location.href });
     } else {
       navigator.clipboard.writeText(window.location.href);
       alert("Link copied to clipboard!");
@@ -328,6 +340,8 @@ const EventDetails = () => {
 
   // ICS calendar download
   const downloadICS = () => {
+    if (!event?.date) return;
+
     const startDate = event.date.replace(/-/g, "") + "T000000Z";
     const endDate = event.date.replace(/-/g, "") + "T235900Z";
 
@@ -335,7 +349,7 @@ const EventDetails = () => {
 BEGIN:VCALENDAR
 VERSION:2.0
 BEGIN:VEVENT
-SUMMARY:${event.name}
+SUMMARY:${event.title}
 DTSTART:${startDate}
 DTEND:${endDate}
 LOCATION:${event.location}
@@ -347,7 +361,7 @@ END:VCALENDAR
     const blob = new Blob([content], { type: "text/calendar" });
     const link = document.createElement("a");
     link.href = URL.createObjectURL(blob);
-    link.download = `${event.name.replace(/\s+/g, "_")}.ics`;
+    link.download = `${event.title.replace(/\s+/g, "_")}.ics`;
     link.click();
   };
 
@@ -441,42 +455,42 @@ END:VCALENDAR
             <div className="flex-1 rounded-lg overflow-hidden shadow-md">
               <img
                 src={mainImage}
-                alt={event.name}
+                alt={event.title}
                 className="w-full h-72 lg:h-96 object-cover rounded-lg"
               />
             </div>
 
             {/* Gallery Thumbnails */}
-            <div className="flex lg:flex-col gap-4 max-h-72 overflow-y-auto">
-              {[event.image, ...(event.gallery || [])].map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setMainImage(img)}
-                  className={`rounded-lg overflow-hidden shadow cursor-pointer border-2 ${
-                    mainImage === img
-                      ? "border-teal-600"
-                      : "border-transparent"
-                  } hover:border-teal-400 transition`}
-                  style={{ width: "80px", height: "80px", flexShrink: 0 }}
-                  aria-label={`Show image ${idx + 1}`}
-                >
-                  <img
-                    src={img}
-                    alt={`Thumbnail ${idx + 1}`}
-                    className="w-full h-full object-cover"
-                  />
-                </button>
-              ))}
-            </div>
+            {event.gallery && event.gallery.length > 0 && (
+              <div className="flex lg:flex-col gap-4 max-h-72 overflow-y-auto">
+                {[event.image, ...event.gallery].map((img, idx) => (
+                  <button
+                    key={idx}
+                    onClick={() => setMainImage(img)}
+                    className={`rounded-lg overflow-hidden shadow cursor-pointer border-2 ${
+                      mainImage === img ? "border-teal-600" : "border-transparent"
+                    } hover:border-teal-400 transition`}
+                    style={{ width: "80px", height: "80px", flexShrink: 0 }}
+                    aria-label={`Show image ${idx + 1}`}
+                  >
+                    <img
+                      src={img}
+                      alt={`Thumbnail ${idx + 1}`}
+                      className="w-full h-full object-cover"
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
 
           {/* Event Metadata */}
           <div className="flex flex-wrap gap-3 mb-6">
             <span className="flex items-center bg-teal-100 px-3 py-1 rounded-full text-sm">
-              <FaTags className="mr-1" /> {event.type}
+              <FaTags className="mr-1" /> {event.category}
             </span>
             <span className="flex items-center bg-blue-100 px-3 py-1 rounded-full text-sm">
-              <FaMoneyBillWave className="mr-1" /> {event.price}
+              <FaMoneyBillWave className="mr-1" /> ${event.price}
             </span>
             <span className="flex items-center bg-red-100 px-3 py-1 rounded-full text-sm">
               <FaMapMarkerAlt className="mr-1" /> {event.location}
@@ -487,24 +501,26 @@ END:VCALENDAR
           <p className="text-gray-800 mb-6">{event.description}</p>
 
           {/* Highlights */}
-          <div className="mb-6">
-            <h3 className="text-xl font-semibold mb-2">Event Highlights</h3>
-            <ul className="list-disc pl-5 text-gray-700 space-y-1">
-              {(event.highlights || []).map((h, i) => (
-                <li key={i}>{h}</li>
-              ))}
-            </ul>
-          </div>
+          {event.highlights && event.highlights.length > 0 && (
+            <div className="mb-6">
+              <h3 className="text-xl font-semibold mb-2">Event Highlights</h3>
+              <ul className="list-disc pl-5 text-gray-700 space-y-1">
+                {event.highlights.map((h, i) => (
+                  <li key={i}>{h}</li>
+                ))}
+              </ul>
+            </div>
+          )}
 
           {/* Like, Share, Book, Calendar Buttons */}
-          <div className="flex flex-wrap gap-3 items-center mb-8">
+          <div className="flex flex-wrap items-center gap-4 mb-10">
             <button
               onClick={handleLikeToggle}
-              aria-pressed={liked}
-              aria-label={liked ? "Unlike event" : "Like event"}
               className={`flex items-center gap-2 px-4 py-2 rounded ${
                 liked ? "bg-red-500 text-white" : "bg-gray-200"
               } hover:bg-red-600 transition`}
+              aria-pressed={liked}
+              aria-label={liked ? "Unlike event" : "Like event"}
             >
               <FaHeart />
               <span>{likesCount}</span>
@@ -512,67 +528,67 @@ END:VCALENDAR
 
             <button
               onClick={handleShare}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition"
               aria-label="Share event"
-              className="flex items-center gap-2 px-4 py-2 rounded bg-gray-200 hover:bg-gray-300 transition"
             >
               <FaShareAlt />
               Share
             </button>
 
             <button
-              onClick={() => alert("Booking functionality coming soon")}
-              aria-label="Book event"
-              className="flex items-center gap-2 px-4 py-2 rounded bg-teal-600 text-white hover:bg-teal-700 transition"
-            >
-              <FaTicketAlt />
-              Book Now
-            </button>
-
-            <button
               onClick={downloadICS}
+              className="flex items-center gap-2 px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition"
               aria-label="Add event to calendar"
-              className="flex items-center gap-2 px-4 py-2 rounded bg-blue-600 text-white hover:bg-blue-700 transition"
             >
               <FaCalendarPlus />
               Add to Calendar
             </button>
+
+            <button
+              onClick={() => {
+                if (!user) {
+                  alert("Please log in to RSVP.");
+                  return;
+                }
+                handleRSVP();
+              }}
+              disabled={rsvping}
+              className={`flex items-center gap-2 px-4 py-2 rounded ${
+                hasRSVPed ? "bg-yellow-500 text-white" : "bg-gray-300"
+              } hover:bg-yellow-600 transition disabled:opacity-50`}
+              aria-pressed={hasRSVPed}
+              aria-label={hasRSVPed ? "Cancel RSVP" : "RSVP to event"}
+            >
+              <FaTicketAlt />
+              {rsvping ? "Processing..." : hasRSVPed ? "Cancel RSVP" : "RSVP"}
+            </button>
           </div>
 
-          {/* RSVP Section */}
-          <section
+          {/* RSVP status live region */}
+          <div
+            role="status"
             aria-live="polite"
             aria-atomic="true"
             ref={rsvpStatusRef}
-            className="mb-8"
+            className="sr-only"
           >
-            <h3 className="text-xl font-semibold mb-2 flex items-center gap-2">
+            {rsvpStatusMessage}
+          </div>
+
+          {/* Attendees Section */}
+          <section aria-labelledby="attendees-heading" className="mb-10">
+            <h2
+              id="attendees-heading"
+              className="text-xl font-semibold flex items-center gap-2"
+            >
               <FaUsers /> Attendees ({attendees.length})
-            </h3>
-
-            <button
-              onClick={handleRSVP}
-              disabled={rsvping}
-              className={`px-6 py-2 rounded font-semibold transition ${
-                hasRSVPed
-                  ? "bg-red-500 text-white hover:bg-red-600"
-                  : "bg-teal-600 text-white hover:bg-teal-700"
-              }`}
-              aria-pressed={hasRSVPed}
-            >
-              {rsvping ? "Processing..." : hasRSVPed ? "Cancel RSVP" : "RSVP"}
-            </button>
-
-            <button
-              onClick={() => setShowAttendeesModal(true)}
-              className="ml-4 px-4 py-2 rounded bg-gray-200 hover:bg-gray-300"
-              aria-haspopup="dialog"
-            >
-              View Attendees
-            </button>
-
-            {rsvpStatusMessage && (
-              <p className="mt-2 text-green-600">{rsvpStatusMessage}</p>
-            )}
+              <button
+                onClick={() => setShowAttendeesModal(true)}
+                className="ml-4 px-2 py-1 bg-teal-600 text-white rounded hover:bg-teal-700"
+              >
+                View List
+              </button>
+            </h2>
           </section>
 
           {/* Attendees Modal */}
@@ -580,157 +596,144 @@ END:VCALENDAR
             <div
               role="dialog"
               aria-modal="true"
-              aria-labelledby="attendees-title"
-              tabIndex={-1}
-              className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4"
+              aria-labelledby="attendees-modal-title"
+              className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center z-50"
               onClick={() => setShowAttendeesModal(false)}
-              onKeyDown={(e) => {
-                if (e.key === "Escape") setShowAttendeesModal(false);
-              }}
             >
               <div
-                className="bg-white rounded-lg max-w-md w-full max-h-[80vh] overflow-y-auto p-6 relative"
+                className="bg-white rounded-lg max-w-md w-full p-6 overflow-y-auto max-h-[80vh]"
                 onClick={(e) => e.stopPropagation()}
               >
-                <h2
-                  id="attendees-title"
-                  className="text-2xl font-semibold mb-4"
-                  tabIndex={0}
+                <h3
+                  id="attendees-modal-title"
+                  className="text-lg font-bold mb-4 flex justify-between items-center"
                 >
                   Attendees List
-                </h2>
+                  <button
+                    onClick={() => setShowAttendeesModal(false)}
+                    aria-label="Close attendees list"
+                    className="text-red-600 hover:text-red-900 text-xl"
+                  >
+                    &times;
+                  </button>
+                </h3>
                 {loadingAttendees ? (
                   <p>Loading attendees...</p>
                 ) : attendees.length === 0 ? (
                   <p>No attendees yet.</p>
                 ) : (
-                  <ul className="list-disc pl-5 space-y-1">
-                    {attendees.map((a) => (
-                      <li key={a.userId || a.id}>{a.userName || "Anonymous"}</li>
+                  <ul className="divide-y divide-gray-200 max-h-60 overflow-y-auto">
+                    {attendees.map((a, idx) => (
+                      <li key={idx} className="py-2">
+                        {a.userName || "Anonymous User"}
+                      </li>
                     ))}
                   </ul>
                 )}
-                <button
-                  onClick={() => setShowAttendeesModal(false)}
-                  className="mt-6 px-4 py-2 rounded bg-red-600 text-white hover:bg-red-700 absolute top-4 right-4"
-                  aria-label="Close attendees modal"
-                >
-                  Close
-                </button>
               </div>
             </div>
           )}
         </main>
 
         {/* Sidebar Filters */}
-        <aside
-          id="sidebar-filters"
-          className={`${
-            showFilters ? "block" : "hidden"
-          } lg:block col-span-1 bg-gray-50 rounded p-4 max-h-[80vh] overflow-y-auto`}
-          aria-label="Event filters and related events"
-        >
-          <div className="mb-4 flex flex-col gap-2">
-            <label htmlFor="sidebar-search" className="sr-only">
-              Search events
-            </label>
+        {showFilters && (
+          <aside
+            id="sidebar-filters"
+            className="lg:col-span-1 sticky top-20 bg-gray-50 p-4 rounded shadow-md max-h-[calc(100vh-5rem)] overflow-y-auto"
+          >
+            <h2 className="font-bold text-lg mb-3">Filters & Tabs</h2>
+
+            {/* Search Box */}
             <input
-              id="sidebar-search"
               type="search"
+              aria-label="Search events"
               placeholder="Search events..."
-              className="w-full p-2 rounded border border-gray-300 focus:outline-teal-500"
+              className="w-full px-3 py-2 border rounded mb-4"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              aria-describedby="search-description"
             />
-            <small id="search-description" className="text-gray-500 text-xs">
-              Filter events by name in all tabs
-            </small>
-          </div>
 
-          {/* Tabs */}
-          <nav
-            role="tablist"
-            aria-label="Event categories"
-            className="flex gap-4 border-b border-gray-300 mb-4"
-            onKeyDown={handleTabKeyDown}
-          >
-            <button
-              role="tab"
-              aria-selected={activeTab === "recent"}
-              aria-controls="tab-panel-recent"
-              id="tab-recent"
-              tabIndex={activeTab === "recent" ? 0 : -1}
-              onClick={() => setActiveTab("recent")}
-              ref={tabRefs.recent}
-              className={`py-2 px-4 font-semibold ${
-                activeTab === "recent"
-                  ? "border-b-4 border-teal-600 text-teal-700"
-                  : "text-gray-600 hover:text-teal-600"
-              } focus:outline-none`}
+            {/* Tabs */}
+            <div
+              role="tablist"
+              aria-label="Event filter tabs"
+              className="flex space-x-3 mb-4"
+              onKeyDown={handleTabKeyDown}
             >
-              Recent
-            </button>
-            <button
-              role="tab"
-              aria-selected={activeTab === "topic"}
-              aria-controls="tab-panel-topic"
-              id="tab-topic"
-              tabIndex={activeTab === "topic" ? 0 : -1}
-              onClick={() => setActiveTab("topic")}
-              ref={tabRefs.topic}
-              className={`py-2 px-4 font-semibold ${
-                activeTab === "topic"
-                  ? "border-b-4 border-teal-600 text-teal-700"
-                  : "text-gray-600 hover:text-teal-600"
-              } focus:outline-none`}
-            >
-              Topic
-            </button>
-            <button
-              role="tab"
-              aria-selected={activeTab === "other"}
-              aria-controls="tab-panel-other"
-              id="tab-other"
-              tabIndex={activeTab === "other" ? 0 : -1}
-              onClick={() => setActiveTab("other")}
-              ref={tabRefs.other}
-              className={`py-2 px-4 font-semibold ${
-                activeTab === "other"
-                  ? "border-b-4 border-teal-600 text-teal-700"
-                  : "text-gray-600 hover:text-teal-600"
-              } focus:outline-none`}
-            >
-              Other
-            </button>
-          </nav>
+              <button
+                role="tab"
+                id="tab-recent"
+                aria-selected={activeTab === "recent"}
+                aria-controls="tabpanel-recent"
+                tabIndex={activeTab === "recent" ? 0 : -1}
+                className={`px-3 py-1 rounded ${
+                  activeTab === "recent" ? "bg-teal-600 text-white" : "bg-gray-200"
+                }`}
+                onClick={() => setActiveTab("recent")}
+                ref={tabRefs.recent}
+              >
+                <FaClock className="inline mr-1" />
+                Recent
+              </button>
+              <button
+                role="tab"
+                id="tab-topic"
+                aria-selected={activeTab === "topic"}
+                aria-controls="tabpanel-topic"
+                tabIndex={activeTab === "topic" ? 0 : -1}
+                className={`px-3 py-1 rounded ${
+                  activeTab === "topic" ? "bg-teal-600 text-white" : "bg-gray-200"
+                }`}
+                onClick={() => setActiveTab("topic")}
+                ref={tabRefs.topic}
+              >
+                <FaTags className="inline mr-1" />
+                Topic
+              </button>
+              <button
+                role="tab"
+                id="tab-other"
+                aria-selected={activeTab === "other"}
+                aria-controls="tabpanel-other"
+                tabIndex={activeTab === "other" ? 0 : -1}
+                className={`px-3 py-1 rounded ${
+                  activeTab === "other" ? "bg-teal-600 text-white" : "bg-gray-200"
+                }`}
+                onClick={() => setActiveTab("other")}
+                ref={tabRefs.other}
+              >
+                <FaEllipsisH className="inline mr-1" />
+                Other
+              </button>
+            </div>
 
-          {/* Tab Panels */}
-          <div
-            id="tab-panel-recent"
-            role="tabpanel"
-            aria-labelledby="tab-recent"
-            hidden={activeTab !== "recent"}
-          >
-            {renderFilteredEvents(recentEvents)}
-          </div>
-          <div
-            id="tab-panel-topic"
-            role="tabpanel"
-            aria-labelledby="tab-topic"
-            hidden={activeTab !== "topic"}
-          >
-            {renderFilteredEvents(sameTopicEvents)}
-          </div>
-          <div
-            id="tab-panel-other"
-            role="tabpanel"
-            aria-labelledby="tab-other"
-            hidden={activeTab !== "other"}
-          >
-            {renderFilteredEvents(otherEvents)}
-          </div>
-        </aside>
+            {/* Tab Panels */}
+            <div
+              id="tabpanel-recent"
+              role="tabpanel"
+              aria-labelledby="tab-recent"
+              hidden={activeTab !== "recent"}
+            >
+              {renderFilteredEvents(recentEvents)}
+            </div>
+            <div
+              id="tabpanel-topic"
+              role="tabpanel"
+              aria-labelledby="tab-topic"
+              hidden={activeTab !== "topic"}
+            >
+              {renderFilteredEvents(sameTopicEvents)}
+            </div>
+            <div
+              id="tabpanel-other"
+              role="tabpanel"
+              aria-labelledby="tab-other"
+              hidden={activeTab !== "other"}
+            >
+              {renderFilteredEvents(otherEvents)}
+            </div>
+          </aside>
+        )}
       </div>
     </ErrorBoundary>
   );

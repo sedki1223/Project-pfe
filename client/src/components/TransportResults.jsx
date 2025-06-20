@@ -1,132 +1,89 @@
-import React, { useEffect, useState } from "react";
-import { useLocation, Link } from "react-router-dom";
+import React, { useEffect, useState } from 'react'
+import { useLocation, Link } from 'react-router-dom'
+import { FaBus, FaTrain, FaTaxi } from 'react-icons/fa'
 
 const TransportResults = () => {
-  const location = useLocation();
-  const [filteredData, setFilteredData] = useState([]);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
+  const location = useLocation()
+  const [transports, setTransports] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState('')
+
+  // Helper: parse query params from URL
+  const getQueryParams = () => {
+    return new URLSearchParams(location.search)
+  }
 
   useEffect(() => {
-    const fetchTransport = async () => {
-      setLoading(true);
-      setError(null);
-
-      // Parse query params
-      const params = new URLSearchParams(location.search);
-      const destination = params.get("destination") || "";
-      const date = params.get("date") || "";
-      let type = params.get("type") || "";
-      const time = params.get("time") || "";
-
-      // If type is "All" or empty, don't send it in query params
-      if (type === "All") {
-        type = "";
-      }
-
+    const fetchTransports = async () => {
+      setLoading(true)
+      setError('')
       try {
-        // Build API URL with query parameters, omit empty params
-        const queryParams = new URLSearchParams();
-        if (destination) queryParams.append("destination", destination);
-        if (date) queryParams.append("date", date);
-        if (type) queryParams.append("type", type);
-        if (time) queryParams.append("time", time);
+        const params = getQueryParams()
+        const response = await fetch(`/api/transport?${params.toString()}`)
+        if (!response.ok) throw new Error('Failed to fetch transport options')
 
-        const response = await fetch(`/api/transport?${queryParams.toString()}`);
-
-        if (!response.ok) {
-          throw new Error(`API error: ${response.status}`);
-        }
-
-        const data = await response.json();
-
-        setFilteredData(data);
+        const data = await response.json()
+        setTransports(data)
       } catch (err) {
-        setError(err.message || "Failed to fetch transport data");
+        setError(err.message || 'Something went wrong')
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
-
-    fetchTransport();
-  }, [location.search]);
-
-  // Helper: format ISO date string as readable date (YYYY-MM-DD)
-  const formatDate = (isoDate) => {
-    if (!isoDate) return "";
-    try {
-      const d = new Date(isoDate);
-      return d.toLocaleDateString(undefined, {
-        year: "numeric",
-        month: "long",
-        day: "numeric",
-      });
-    } catch {
-      return isoDate;
     }
-  };
+
+    fetchTransports()
+  }, [location.search])
+
+  // Icon map
+  const iconMap = {
+    bus: <FaBus className="text-blue-600" />,
+    train: <FaTrain className="text-green-600" />,
+    taxi: <FaTaxi className="text-yellow-600" />,
+  }
 
   return (
-    <div className="px-4 md:px-20 mt-20 mb-20 min-h-screen">
-      <h1 className="text-3xl font-extrabold mb-10 text-center text-gray-900">
-        Available Transport Options
-      </h1>
+    <div className="max-w-6xl mx-auto px-6 py-16">
+      <h2 className="text-3xl font-bold mb-8 text-center">Available Transport Options</h2>
 
-      {loading && (
-        <p className="text-center text-gray-500 text-lg mt-20">Loading transport options...</p>
+      {loading && <p className="text-center text-lg">Loading...</p>}
+      {error && <p className="text-center text-red-600 font-semibold">{error}</p>}
+
+      {!loading && !error && transports.length === 0 && (
+        <p className="text-center text-gray-600">No transport options found.</p>
       )}
 
-      {error && (
-        <p className="text-center text-red-600 text-lg mt-20">
-          Error: {error}
-        </p>
-      )}
-
-      {!loading && !error && filteredData.length > 0 ? (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {filteredData.map((item, idx) => (
-            <div
-              key={item._id || idx} // Prefer unique _id if available
-              className="border border-gray-200 rounded-xl p-6 shadow-md bg-white hover:shadow-lg hover:scale-[1.03] transition-transform duration-300"
-            >
-              <h2 className="text-2xl font-semibold mb-3 text-blue-700">{item.type}</h2>
-              <p className="mb-1 text-gray-700">
-                <strong>Destination:</strong> {item.destination}
-              </p>
-              <p className="mb-1 text-gray-700">
-                <strong>Date:</strong> {formatDate(item.date)}
-              </p>
-              <p className="mb-1 text-gray-700">
-                <strong>Time:</strong> {item.time}
-              </p>
-              <p className="mb-3 text-gray-700">
-                <strong>Price:</strong>{" "}
-                <span className="text-green-600 font-semibold">${item.price}</span>
-              </p>
-              <p className="mt-2 text-gray-500 text-sm leading-relaxed italic">
-                {item.details || "No additional details provided."}
-              </p>
+      <div className="grid gap-6 md:grid-cols-2">
+        {transports.map((t) => (
+          <Link
+            to={`/transport/${t._id}`}
+            key={t._id}
+            className="border rounded-lg p-6 shadow hover:shadow-lg transition block"
+            aria-label={`View details for ${t.type} to ${t.destination} on ${new Date(t.date).toLocaleDateString()}`}
+          >
+            <div className="flex items-center gap-4 mb-3 text-xl font-semibold">
+              {iconMap[t.type] || null}
+              <span className="capitalize">{t.type}</span>
             </div>
-          ))}
-        </div>
-      ) : (
-        !loading && !error && (
-          <p className="text-center text-gray-500 text-lg mt-20">
-            No transport options found. Try different filters.
-          </p>
-        )
-      )}
-
-      <div className="text-center mt-16">
-        <Link
-          to="/transport"
-          className="inline-block bg-blue-600 text-white px-8 py-3 rounded-lg shadow hover:bg-blue-700 transition-colors duration-300 font-semibold"
-        >
-          Back to Search
-        </Link>
+            <p>
+              <strong>Destination:</strong> {t.destination}
+            </p>
+            <p>
+              <strong>Date:</strong> {new Date(t.date).toLocaleDateString()}
+            </p>
+            <p>
+              <strong>Time:</strong> {t.time}
+            </p>
+            <p>
+              <strong>Price:</strong> ${t.price.toFixed(2)}
+            </p>
+            <p>
+              <strong>Available Seats:</strong> {t.availableSeats}
+            </p>
+          </Link>
+        ))}
       </div>
     </div>
-  );
-};
+  )
+}
 
-export default TransportResults;
+export default TransportResults

@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { assets, facilityIcons, roomCommonData, roomsDummyData} from '../assets/assets' // <-- updated import
+import { assets, facilityIcons, roomCommonData } from '../assets/assets'
 import StarRating from '../components/StarRating'
 import toast from 'react-hot-toast'
+import axios from 'axios'
 
 const RoomDetails = () => {
   const { id } = useParams()
@@ -10,22 +11,28 @@ const RoomDetails = () => {
 
   const [room, setRoom] = useState(null)
   const [mainImage, setMainImage] = useState(null)
+  const [loading, setLoading] = useState(true)
 
   const [checkInDate, setCheckInDate] = useState('')
   const [checkOutDate, setCheckOutDate] = useState('')
   const [guests, setGuests] = useState(1)
-
   const [isAvailable, setIsAvailable] = useState(false)
 
   useEffect(() => {
-    const foundRoom = roomsDummyData.find(room => room._id === id) // <-- updated usage
-    if (foundRoom) {
-      setRoom(foundRoom)
-      setMainImage(foundRoom.images[0])
-    } else {
-      toast.error('Room not found')
-      navigate('/')
+    const fetchRoom = async () => {
+      try {
+        const res = await axios.get(`http://localhost:5000/api/rooms/${id}`)
+        setRoom(res.data.room)
+        setMainImage(res.data.room.images[0])
+      } catch (err) {
+        toast.error('Room not found')
+        navigate('/')
+      } finally {
+        setLoading(false)
+      }
     }
+
+    fetchRoom()
   }, [id, navigate])
 
   const checkRoomAvailability = (e) => {
@@ -51,15 +58,14 @@ const RoomDetails = () => {
     navigate('/bookings')
   }
 
-  if (!room) {
-    return <div className="min-h-screen flex justify-center items-center">Loading...</div>
-  }
+  if (loading) return <div className="min-h-screen flex justify-center items-center">Loading...</div>
+  if (!room) return null
 
   return (
     <div className="py-28 md:py-35 px-4 md:px-16 lg:px-24 xl:px-32">
       <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
         <h1 className="text-3xl md:text-4xl font-playfair">
-          {room.hotel.name} <span className="font-inter text-sm">{room.roomType}</span>
+          {room.hotel?.name} <span className="font-inter text-sm">{room.roomType}</span>
         </h1>
         <p className="text-xs font-inter py-1.5 px-3 text-white bg-orange-500 rounded-full">20% OFF</p>
       </div>
@@ -71,13 +77,13 @@ const RoomDetails = () => {
 
       <div className="flex items-center gap-2 mt-2">
         <img src={assets.locationIcon} alt="location-icon" />
-        <span>{room.hotel.address}</span>
+        <span>{room.hotel?.address}</span>
       </div>
 
       <div className="flex flex-col lg:flex-row mt-6 gap-6">
         <div className="lg:w-1/2 w-full">
           <img
-            src={mainImage}
+            src={mainImage || assets.placeholderImage}
             alt="Room"
             className="w-full rounded-xl shadow-lg object-cover"
           />
@@ -106,13 +112,13 @@ const RoomDetails = () => {
                 key={i}
                 className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100"
               >
-                <img src={facilityIcons[amenity]} alt={amenity} className="w-5 h-5" />
+                <img src={facilityIcons[amenity] || assets.placeholderIcon} alt={amenity} className="w-5 h-5" />
                 <p className="text-xs">{amenity}</p>
               </div>
             ))}
           </div>
         </div>
-        <p className="text-2xl font-medium">${room.pricePerNight}/night</p>
+        <p className="text-2xl font-medium">${room.price}/night</p>
       </div>
 
       <form
@@ -121,9 +127,7 @@ const RoomDetails = () => {
       >
         <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-10 text-gray-500">
           <div className="flex flex-col">
-            <label htmlFor="checkInDate" className="font-medium">
-              Check-In
-            </label>
+            <label htmlFor="checkInDate" className="font-medium">Check-In</label>
             <input
               type="date"
               id="checkInDate"
@@ -138,9 +142,7 @@ const RoomDetails = () => {
           <div className="w-px h-15 bg-gray-300/70 max-md:hidden"></div>
 
           <div className="flex flex-col">
-            <label htmlFor="checkOutDate" className="font-medium">
-              Check-Out
-            </label>
+            <label htmlFor="checkOutDate" className="font-medium">Check-Out</label>
             <input
               type="date"
               id="checkOutDate"
@@ -156,9 +158,7 @@ const RoomDetails = () => {
           <div className="w-px h-15 bg-gray-300/70 max-md:hidden"></div>
 
           <div className="flex flex-col">
-            <label htmlFor="guests" className="font-medium">
-              Guests
-            </label>
+            <label htmlFor="guests" className="font-medium">Guests</label>
             <input
               type="number"
               id="guests"
@@ -198,12 +198,12 @@ const RoomDetails = () => {
       <div className="flex flex-col items-start gap-4">
         <div className="flex gap-4">
           <img
-            src={room.hotel.owner.image}
+            src={room.hotel?.owner?.image || assets.userPlaceholder}
             alt="Host"
-            className="h-14 w-14 md:h-18 md:w-18 rounded-full"
+            className="h-14 w-14 md:h-18 md:w-18 rounded-full object-cover"
           />
           <div>
-            <p className="text-lg md:text-xl">Hosted By {room.hotel.name}</p>
+            <p className="text-lg md:text-xl">Hosted By {room.hotel?.name}</p>
             <div className="flex items-center mt-1">
               <StarRating />
               <p className="ml-2">+200 reviews</p>

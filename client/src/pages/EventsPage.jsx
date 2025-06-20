@@ -74,22 +74,21 @@ const EventsPage = () => {
     return events.filter((e) => e.type === activeTab)
   }, [activeTab, events])
 
-const filteredBySearchAndPrice = filteredByCategory.filter((e) => {
-  const search = debouncedSearchTerm.toLowerCase()
-  const name = String(e.name ?? '').toLowerCase()
-  const location = String(e.location ?? '').toLowerCase()
-  const price = String(e.price ?? '').toLowerCase()
+  const filteredBySearchAndPrice = filteredByCategory.filter((e) => {
+    const search = debouncedSearchTerm.toLowerCase()
+    const name = String(e.title ?? '').toLowerCase()
+    const location = String(e.location ?? '').toLowerCase()
+    const price = String(e.price ?? '').toLowerCase()
 
-  const matchesSearch = name.includes(search) || location.includes(search)
+    const matchesSearch = name.includes(search) || location.includes(search)
 
-  const matchesPrice =
-    priceFilter === 'all' ||
-    (priceFilter === 'free' && price === 'free') ||
-    (priceFilter === 'paid' && price !== 'free')
+    const matchesPrice =
+      priceFilter === 'all' ||
+      (priceFilter === 'free' && price === 'free') ||
+      (priceFilter === 'paid' && price !== 'free')
 
-  return matchesSearch && matchesPrice
-})
-
+    return matchesSearch && matchesPrice
+  })
 
   // Pagination
   const totalPages = Math.ceil(filteredBySearchAndPrice.length / EVENTS_PER_PAGE)
@@ -182,17 +181,17 @@ const filteredBySearchAndPrice = filteredByCategory.filter((e) => {
               to={`/events/${event.id}`}
               key={event.id}
               className="block rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 bg-white"
-              title={event.name}
+              title={event.title}
             >
               <div className="relative h-48 overflow-hidden">
                 <img
                   src={event.image || NO_IMAGE}
-                  alt={event.name}
+                  alt={event.title}
                   onError={handleImageError}
                   className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                 />
                 <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-white">
-                  <h3 className="text-lg font-semibold">{event.name}</h3>
+                  <h3 className="text-lg font-semibold">{event.title}</h3>
                   <p className="text-xs">{formatDate(event.date)}</p>
                 </div>
               </div>
