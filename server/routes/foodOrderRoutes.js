@@ -6,7 +6,6 @@ import {
   getVendorFoods,
   updateFoodAvailability,
 } from '../controllers/orderController.js';
-
 import { protect } from '../controllers/authMiddleware.js';
 
 const foodRouter = express.Router();

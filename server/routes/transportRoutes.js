@@ -5,12 +5,12 @@ import {
   getTransports,
   getTransportById 
 } from '../controllers/transportController.js'
-import { requireAuth } from '../controllers/authMiddleware.js'
+import { protect } from '../controllers/authMiddleware.js'
 
 const router = express.Router()
 
 router.get('/', getTransports)
 router.get('/:id', getTransportById) 
-router.post('/', requireAuth, createTransport)
+router.post('/', protect, createTransport)
 
 export default router

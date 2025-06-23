@@ -127,7 +127,7 @@ Please follow this exact format for your response:
 - Name: ..., Date: ..., Location: ...
 `;
 
-  // Append formatting instructions to user's prompt
+
   prompt = prompt.trim() + "\n\n" + formatInstructions;
 
   try {

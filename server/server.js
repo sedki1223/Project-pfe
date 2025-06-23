@@ -51,7 +51,7 @@ const startServer = async () => {
     app.use('/api/reservations', reservationRoutes);
     
 
-    // OpenAI trip generation route
+    // Groq trip generation route
     app.use('/api/generate-trip', tripRouter);
     
 

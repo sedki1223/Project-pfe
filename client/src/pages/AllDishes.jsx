@@ -30,7 +30,7 @@ const RadioButton = ({ label, selected = false, onChange = () => {} }) => (
   </label>
 );
 
-const AllFoods = () => {
+const AllDishes = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
   const { currency = '$' } = useAppContext();
@@ -137,7 +137,7 @@ const AllFoods = () => {
   if (loading) return <p className="text-center mt-20">Loading dishes...</p>;
   if (error) return <p className="text-center mt-20 text-red-600">{error}</p>;
 
-  return (
+ return (
     <div className="flex flex-col-reverse lg:flex-row items-start justify-between pt-28 md:pt-35 px-4 md:px-16 lg:px-24 xl:px-32">
       <div className="flex-1">
         <div className="flex flex-col items-start text-left">
@@ -167,19 +167,22 @@ const AllFoods = () => {
                 }
               }}
             >
-              <img
-                src={dish.image || assets.defaultFoodImage}
-                alt={dish.name}
-                className="max-h-[260px] md:w-1/2 rounded-xl shadow-lg object-cover"
-                onError={(e) => {
-                  e.currentTarget.src = assets.defaultFoodImage;
-                }}
-              />
+              <div className="w-full md:w-1/2 h-[260px] rounded-xl overflow-hidden">
+                <img
+                  src={dish.images?.[0] || NO_IMAGE}
+                  alt={dish.name}
+                  className="w-full h-full object-cover rounded-xl shadow-lg"
+                  onError={(e) => {
+                    e.currentTarget.src = NO_IMAGE;
+                  }}
+                />
+              </div>
+
               <div className="md:w-1/2 flex flex-col gap-2">
                 <p className="text-gray-500">{dish.restaurant?.city}</p>
                 <p className="text-gray-800 text-3xl font-playfair">{dish.name}</p>
                 <div className="flex items-center">
-                  <StarRating rating={4} /> {/* no rating in model, fallback to 4 */}
+                  <StarRating rating={4} />
                   <p className="ml-2">200+ reviews</p>
                 </div>
                 <div className="flex items-center gap-1 text-gray-500 mt-2 text-sm">
@@ -192,7 +195,12 @@ const AllFoods = () => {
                       key={index}
                       className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#F5F5FF]/70"
                     >
-                      <img src={assets.ingredientIcons?.[ingredient]} alt={ingredient} className="w-5 h-5" />
+                      <img
+                        src={assets.ingredientIcons?.[ingredient]}
+                        alt={ingredient}
+                        className="w-5 h-5"
+                        onError={(e) => (e.currentTarget.src = NO_IMAGE)}
+                      />
                       <p className="text-xs">{ingredient}</p>
                     </div>
                   ))}
@@ -206,6 +214,7 @@ const AllFoods = () => {
         )}
       </div>
 
+      {/* Filter Panel (unchanged) */}
       <div className="bg-white w-80 border border-gray-300 text-gray-600 max-lg:mb-8 lg:mt-16">
         <div className="flex items-center justify-between px-5 py-2.5 border-b border-gray-300">
           <p className="text-base font-medium text-gray-800">FILTERS</p>
@@ -266,4 +275,4 @@ const AllFoods = () => {
   );
 };
 
-export default AllFoods;
+export default AllDishes;

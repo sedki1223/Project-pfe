@@ -9,7 +9,7 @@ const TransportSection = () => {
   return (
     <div className="bg-white px-6 md:px-16 lg:px-24 xl:px-32 py-20 min-h-[600px] flex flex-col items-center">
       <Title
-        title="🚐 Getting Around"
+        title="Getting Around"
         subTitle="Explore transport options across Tunisia."
       />
 
@@ -17,15 +17,22 @@ const TransportSection = () => {
         {transportData.slice(0, 3).map((mode) => (
           <div
             key={mode.id}
-            className="bg-white rounded-xl shadow-lg p-5 flex flex-col justify-between hover:shadow-2xl transition-shadow duration-300"
+            onClick={() => navigate(`/transportation/${mode.id}`)}
+            className="bg-white rounded-xl shadow-lg hover:shadow-2xl transition-shadow duration-300 cursor-pointer overflow-hidden"
           >
-            <img src={mode.icon} alt={mode.type} className="h-12 w-12 mb-5" />
-            <h3 className="font-playfair text-2xl font-semibold text-gray-900 mb-3">
-              {mode.type}
-            </h3>
-            <p className="text-sm text-gray-700">
-              {mode.description}
-            </p>
+            <img
+              src={mode.image}
+              alt={mode.type}
+              className="w-full h-48 object-cover"
+            />
+            <div className="p-5 flex flex-col justify-between">
+              <h3 className="font-playfair text-2xl font-semibold text-gray-900 mb-3">
+                {mode.type}
+              </h3>
+              <p className="text-sm text-gray-700">
+                {mode.description}
+              </p>
+            </div>
           </div>
         ))}
       </div>

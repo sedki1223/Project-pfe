@@ -5,15 +5,22 @@ import Room from "../models/Room.js";
 
 
 // Function to check if a booking is available
-const checkBookingAvailability = async ({ checkInDate, checkOutDate, roomId }) => {
+export const checkBookingAvailability = async ({ checkInDate, checkOutDate, roomId }) => {
   try {
+    const checkIn = new Date(checkInDate);
+    const checkOut = new Date(checkOutDate);
+
+    if (isNaN(checkIn) || isNaN(checkOut)) {
+      throw new Error("Invalid date format");
+    }
+
     const bookings = await Booking.find({
       room: roomId,
-      checkInDate: { $lte: checkOutDate },
-      checkOutDate: { $gte: checkInDate },
+      checkIn: { $lte: checkOut },
+      checkOut: { $gte: checkIn },
     });
-    const isAvailable = bookings.length === 0;
-    return isAvailable;
+
+    return bookings.length === 0;
   } catch (error) {
     console.error("Error checking booking availability:", error);
     return false;
@@ -23,16 +30,26 @@ const checkBookingAvailability = async ({ checkInDate, checkOutDate, roomId }) =
 export const checkAvailabilityAPI = async (req, res) => {
   try {
     const { checkInDate, checkOutDate, roomId } = req.body;
+
+    if (!checkInDate || !checkOutDate || !roomId) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
+    }
+
     const isAvailable = await checkBookingAvailability({ checkInDate, checkOutDate, roomId });
-    res.json({ success: true, isAvailable });
+
+    return res.json({ success: true, isAvailable });
   } catch (error) {
-    res.json({ success: false, message: error.message });
+    return res.status(400).json({ success: false, message: error.message });
   }
 };
+
+
 
 // API to create a booking
 // POST /api/bookings/book
 export const createBooking = async (req, res) => {
+    console.log("Inside createBooking");
+  console.log("Request body:", req.body);
   try {
     const { room, checkInDate, checkOutDate, guests } = req.body;
     const user = req.user._id;
@@ -50,7 +67,7 @@ export const createBooking = async (req, res) => {
 
     // Get room and hotel data
     const roomData = await Room.findById(room).populate("hotel");
-    let totalPrice = roomData.pricePerNight;
+    let totalPrice = roomData.price;
 
     // Calculate total price based on number of nights
     const checkIn = new Date(checkInDate);

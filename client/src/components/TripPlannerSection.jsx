@@ -9,7 +9,7 @@ const TripPlannerSection = () => {
   return (
     <div className="relative px-6 md:px-16 lg:px-24 xl:px-32 py-20 bg-white text-gray-900">
       <Title
-        title="🤖 Plan Your Smart Trip"
+        title="Plan Your Smart Trip"
         subTitle="AI-powered itineraries tailored for you."
       />
 
@@ -17,7 +17,7 @@ const TripPlannerSection = () => {
         {/* Illustration */}
         <div className="w-full md:w-1/2">
           <img
-            src={assets.aiTripPlanner}
+            src="https://res.cloudinary.com/dk9y2o5tl/image/upload/v1750622690/maxresdefault_l64z7a.jpg"
             alt="Trip planner illustration"
             className="w-full h-auto rounded-xl shadow-md"
           />

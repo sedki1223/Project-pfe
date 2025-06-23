@@ -16,44 +16,34 @@ const Home = () => {
       <section>
         <Hero />
       </section>
-
       {/* Featured Destinations */}
       <section >
         <FeaturedDestination />
       </section>
-
-      
-
       {/* Food Section */}
       <section>
         <FoodSection />
       </section>
-
       {/* Event Section */}
       <section>
         <EventSection />
       </section>
-
       {/* Transport Section */}
       <section>
         <TransportSection />
       </section>
-
       {/* AI Trip Planner Section */}
       <section>
         <TripPlannerSection />
       </section>
-
       {/* Exclusive Offers */}
       <section >
         <ExclusiveOffers />
       </section>
-
       {/* Testimonials */}
       <section >
         <Testimonial />
       </section>
-
       {/* Newsletter */}
       <section >
         <NewsLetter />

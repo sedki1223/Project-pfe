@@ -6,22 +6,28 @@ export const createDish = async (req, res) => {
   try {
     const { name, price, description = "", category, ingredients, restaurant } = req.body;
 
-    if (!req.files || req.files.length === 0) {
-      return res.status(400).json({ success: false, message: "No images uploaded" });
+    if (!name || !price || !category || !restaurant) {
+      return res.status(400).json({ success: false, message: "Missing required fields" });
     }
 
-    const uploadResponse = await cloudinary.uploader.upload(req.files[0].path, {
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No image uploaded" });
+    }
+
+    const uploadResponse = await cloudinary.uploader.upload(req.file.path, {
       folder: "dishes",
     });
 
     const imageUrl = uploadResponse.secure_url;
+
+    const parsedIngredients = typeof ingredients === "string" ? JSON.parse(ingredients) : ingredients;
 
     const newDish = await Dish.create({
       name,
       price: Number(price),
       description,
       category,
-      ingredients: ingredients ? JSON.parse(ingredients) : [],
+      ingredients: parsedIngredients || [],
       image: imageUrl,
       restaurant,
       isAvailable: true,
@@ -34,10 +40,9 @@ export const createDish = async (req, res) => {
   }
 };
 
-// Get all dishes created by restaurants owned by the authenticated user
+// Get all dishes for restaurants owned by authenticated user
 export const getOwnerDishes = async (req, res) => {
   try {
-    const Restaurant = await import("../models/Restaurant.js");
     const ownedRestaurants = await Restaurant.find({ owner: req.user._id }).select("_id");
     const restaurantIds = ownedRestaurants.map((r) => r._id);
 
@@ -50,7 +55,7 @@ export const getOwnerDishes = async (req, res) => {
   }
 };
 
-// Get all available dishes with restaurant and owner info populated
+// Get all available dishes with populated restaurant and owner info
 export const getDishes = async (req, res) => {
   try {
     const dishes = await Dish.find({ isAvailable: true })
@@ -70,7 +75,7 @@ export const getDishes = async (req, res) => {
   }
 };
 
-// Toggle dish availability (only if user owns the restaurant)
+// Toggle dish availability (only for owners)
 export const updateDishAvailability = async (req, res) => {
   try {
     const { id } = req.params;
@@ -80,8 +85,8 @@ export const updateDishAvailability = async (req, res) => {
       return res.status(404).json({ success: false, message: "Dish not found" });
     }
 
-    if (!dish.restaurant || dish.restaurant.owner.toString() !== req.user._id.toString()) {
-      return res.status(403).json({ success: false, message: "Unauthorized" });
+    if (dish.restaurant.owner.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ success: false, message: "Unauthorized access" });
     }
 
     dish.isAvailable = !dish.isAvailable;
@@ -94,7 +99,7 @@ export const updateDishAvailability = async (req, res) => {
   }
 };
 
-// Get a single dish by ID with populated restaurant and owner info
+// Get a dish by ID
 export const getDishById = async (req, res) => {
   try {
     const { id } = req.params;

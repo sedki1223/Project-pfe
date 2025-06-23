@@ -23,7 +23,7 @@ import EventDetails from './components/EventDetails';
 import AdminRoute from './components/AdminRoute';
 import AdminDashboard from './components/AdminDashboard';
 import TransportResults from "./components/TransportResults";
-
+import AllDishes from './pages/AllDishes';
 // Hotel owner pages
 import Layout from './pages/HotelOwner/Layout';
 import Dashboard from './pages/HotelOwner/Dashboard';
@@ -32,7 +32,7 @@ import ListeRoom from './pages/HotelOwner/ListeRoom';
 
 import { Toaster } from 'react-hot-toast';
 import { useAppContext } from './context/AppContext';
-import AllFoods from './pages/AllFood';
+
 
 const App = () => {
   const location = useLocation();
@@ -57,7 +57,7 @@ const App = () => {
           <Route path="/rooms/:id" element={<RoomDetails />} />
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/my-orders" element={<DeliveryTracking />} />
-          <Route path="/dish" element={<AllFoods />} />
+          <Route path="/dishes" element={<AllDishes/>} />
           <Route path="/about" element={<About />} />
           <Route path="/transportation" element={<Transportation />} />
           <Route path="/aiplanner" element={<AiPlanner />} />

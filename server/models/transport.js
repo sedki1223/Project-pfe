@@ -1,4 +1,3 @@
-// models/Transport.js
 import mongoose from 'mongoose'
 
 const transportSchema = new mongoose.Schema({

@@ -8,7 +8,7 @@ import {
 } from "../controllers/dishController.js";
 
 import upload from '../middleware/uploadMiddleware.js';
-import { protect } from '../controllers/authMiddleware.js';
+import { protect, requireRole } from '../controllers/authMiddleware.js';
 
 const router = express.Router();
 
@@ -21,7 +21,8 @@ router.get("/", getDishes);
 router.get("/my-dishes", protect, getOwnerDishes);
 
 // ✅ Authenticated Route: Create a new dish (with image upload)
-router.post("/create", protect, upload.array("images", 5), createDish);
+router.post("/create", protect, requireRole(["restaurantOwner"]), createDish);
+
 
 // ✅ Authenticated Route: Update dish availability (toggle on/off)
 router.put("/:id/availability", protect, updateDishAvailability);

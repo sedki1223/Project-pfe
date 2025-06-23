@@ -8,11 +8,11 @@ import {
   updateUserRole,
   getAllReservations
 } from '../controllers/adminController.js'
-import { requireAuth, requireRole } from '../controllers/authMiddleware.js'
+import { protect, requireRole } from '../controllers/authMiddleware.js'
 
 const router = express.Router()
 
-router.use(requireAuth, requireRole(['admin']))
+router.use(protect, requireRole(['admin']))
 
 router.get('/stats', getStats)
 router.get('/users', getUsers)

@@ -6,9 +6,9 @@ const dishSchema = new mongoose.Schema({
   price: { type: Number, required: true },
   restaurant: { type: mongoose.Schema.Types.ObjectId, ref: "Restaurant", required: true },
   ingredients: { type: [String], default: [] },  
-  image: { type: String, required: true },       
-  category: { type: String, required: true },    
-  isAvailable: { type: Boolean, default: true },
+  image: { type: String,  },       
+  category: { type: String},    
+  isAvailable: { type: Boolean},
 }, { timestamps: true });
 
 export default mongoose.model("Dish", dishSchema);

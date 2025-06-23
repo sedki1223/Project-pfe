@@ -80,7 +80,7 @@ export const AppProvider = ({ children }) => {
     getToken,
     isOwner,
     ownerType,
-    isAdmin, // Expose computed isAdmin
+    isAdmin, 
     setIsOwner,
     showHotelReg,
     setShowHotelReg,

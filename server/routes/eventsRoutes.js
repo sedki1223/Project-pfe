@@ -1,7 +1,7 @@
 // routes/eventRoutes.js
 import express from 'express'
 import { createEvent, getEvents } from '../controllers/eventsController.js'
-import { requireAuth, requireRole } from '../controllers/authMiddleware.js'
+import { protect, requireRole } from '../controllers/authMiddleware.js'
 import {
   rsvpToEvent,
   getEventAttendees,
@@ -12,11 +12,11 @@ import {
 
 const router = express.Router()
 
-router.post('/', requireAuth, createEvent)
+router.post('/', protect, createEvent)
 router.get('/', getEvents)
-router.post('/:id/rsvp', requireAuth, rsvpToEvent)
-router.get('/:id/attendees', requireAuth, requireRole(['admin']), getEventAttendees)
+router.post('/:id/rsvp', protect, rsvpToEvent)
+router.get('/:id/attendees', protect, requireRole(['admin']), getEventAttendees)
 router.get('/:id', getEventById)
-router.delete('/:id/rsvp', requireAuth, cancelRsvpToEvent)
+router.delete('/:id/rsvp', protect, cancelRsvpToEvent)
 
 export default router

@@ -83,8 +83,8 @@ export const assets = {
     uploadArea,
     totalBookingIcon,
     totalRevenueIcon,
-
 }
+
 
 export const cities = [
     "Tozeur",
@@ -389,27 +389,23 @@ export const eventsData = [
 ];
 export const transportData = [
   {
-    id: 'trans001',
-    type: 'Taxi',
-    description: 'Available in cities and towns across Tunisia for local and airport transfers.',
-    icon: '/icons/taxi.svg',
-  },
-  {
-    id: 'trans002',
+    id: 'bus',
     type: 'Bus',
-    description: 'Intercity and regional bus services connecting major Tunisian cities.',
-    icon: '/icons/bus.svg',
+    image: 'https://res.cloudinary.com/dk9y2o5tl/image/upload/v1750622396/SNTRI_cadaan.jpg', // Use actual image paths
+    description: 'Affordable way to travel between cities and towns.'
   },
   {
-    id: 'trans003',
+    id: 'train',
     type: 'Train',
-    description: 'SNCFT rail network linking coastal and inland cities across Tunisia.',
-    icon: '/icons/train.svg',
+    image: 'https://res.cloudinary.com/dk9y2o5tl/image/upload/v1750622444/1200px-Train_electrique__SNCFT__Sousse_2012_gutlld.jpg',
+    description: 'Connects major cities with scenic routes.'
   },
   {
-    id: 'trans004',
-    type: 'Domestic Flights',
-    description: 'Regular flights connecting Tozeur, Tunis, Djerba, and other airports.',
-    icon: '/icons/plane.svg',
+    id: 'taxi',
+    type: 'Taxi',
+    image: 'https://res.cloudinary.com/dk9y2o5tl/image/upload/v1750622067/IMGBN115416taxi_inyvok.jpg',
+    description: 'Flexible and fast local transport option.'
   },
-];
+  // ... more if needed
+]
+ 
