@@ -1,4 +1,5 @@
 import User from "../models/User.js";
+import mongoose from "mongoose";
 
 export default async function clerkWebhooks(req, res) {
   const { type, data } = req.body;
