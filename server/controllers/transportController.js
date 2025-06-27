@@ -28,32 +28,27 @@ export const createTransport = async (req, res) => {
 // Fetch transports with optional filters
 export const getTransports = async (req, res) => {
   try {
-    const { destination, date, type, time } = req.query
-    const filters = {}
+    const { destination, date, type, time } = req.query;
+    const filters = {};
 
-    if (destination) filters.destination = destination
-    if (type && type !== 'All') filters.type = type.toLowerCase()
-
-    if (date) {
-      // Filter by date only (ignore time portion)
-      const selectedDate = new Date(date)
-      const nextDate = new Date(selectedDate)
-      nextDate.setDate(nextDate.getDate() + 1)
-
-      filters.date = {
-        $gte: selectedDate,
-        $lt: nextDate
-      }
+    if (destination) {
+      // Case-insensitive partial match
+      filters.destination = { $regex: destination, $options: 'i' };
     }
 
-    if (time) filters.time = time
+    if (type && type !== 'All') {
+      filters.type = type.toLowerCase();
+    }
 
-    const transports = await Transport.find(filters).sort({ date: 1, time: 1 })
-    res.json(transports)
+
+
+    const transports = await Transport.find(filters).sort({ date: 1, time: 1 });
+    res.json(transports);
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: err.message });
   }
-}
+};
+
 // controllers/transportController.js
 export const getTransportById = async (req, res) => {
   try {

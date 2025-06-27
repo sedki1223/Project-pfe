@@ -1,4 +1,5 @@
 import Dish from "../models/Dish.js";
+import Restaurant from "../models/restaurant.js";
 import { v2 as cloudinary } from "cloudinary";
 
 // Create a new Dish

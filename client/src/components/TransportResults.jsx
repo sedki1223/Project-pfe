@@ -13,26 +13,27 @@ const TransportResults = () => {
     return new URLSearchParams(location.search)
   }
 
-  useEffect(() => {
-    const fetchTransports = async () => {
-      setLoading(true)
-      setError('')
-      try {
-        const params = getQueryParams()
-        const response = await fetch(`/api/transport?${params.toString()}`)
-        if (!response.ok) throw new Error('Failed to fetch transport options')
+useEffect(() => {
+  const fetchTransports = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const params = new URLSearchParams(location.search);
+      const response = await fetch(`/api/transport?${params.toString()}`);
+      if (!response.ok) throw new Error(`Failed to fetch transport options: ${response.statusText}`);
 
-        const data = await response.json()
-        setTransports(data)
-      } catch (err) {
-        setError(err.message || 'Something went wrong')
-      } finally {
-        setLoading(false)
-      }
+      const data = await response.json();
+      setTransports(data);
+    } catch (err) {
+      console.error(err);
+      setError(err.message || 'Something went wrong');
+    } finally {
+      setLoading(false);
     }
+  };
 
-    fetchTransports()
-  }, [location.search])
+  fetchTransports();
+}, [location.search]);
 
   // Icon map
   const iconMap = {

@@ -4,7 +4,6 @@ import express from "express";
 import cors from "cors";
 import connectDB from "./configs/db.js";
 import connectCloudinary from "./configs/cloudinary.js";
-
 import { clerkMiddleware } from "@clerk/express";
 import clerkWebhooks from "./controllers/clerkWebhooks.js";
 

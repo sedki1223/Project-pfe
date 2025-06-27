@@ -14,35 +14,49 @@ const HotelReg = () => {
   const [city, setCity] = useState('');
   const [cuisineType, setCuisineType] = useState('');
 
-const onSubmitHandler = async (e) => {
-  e.preventDefault();
-  try {
-    const { data } = await axios.post(
-      '/api/restaurant/register',
-      { name, contact, address, city },
-      {
-        headers: {
-          Authorization: `Bearer ${await getToken()}`,
-        },
+  const onSubmitHandler = async (e) => {
+    e.preventDefault();
+    try {
+      const token = await getToken();
+      console.log("🪪 Token:", token);
+
+      const endpoint = isHotel ? '/api/hotel/register' : '/api/restaurant/register';
+
+      const payload = {
+        name,
+        contact,
+        address,
+        city,
+        ...(isHotel ? {} : { cuisineType }),
+      };
+
+      const { data } = await axios.post(
+        endpoint,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("🌐 Raw API response:", data);
+
+      if (data.success) {
+        toast.success(data.message || "Registration successful!");
+        setIsOwner(true);
+        setShowHotelReg(false);
+      } else {
+        console.warn("⚠️ Backend responded with failure:", data);
+        toast.error(data.message || "Registration failed");
       }
-    );
-
-    console.log("🌐 Raw API response:", data);
-
-    if (data.success) {
-      toast.success(data.message);
-      setIsOwner(true);
-      setShowFoodReg(false);
-    } else {
-      console.warn("⚠️ Backend responded with failure:", data);
-      toast.error(data.message || "Registration failed");
+    } catch (err) {
+      console.error("❌ Registration Error:", err);
+      console.log("❗ Error response:", err.response?.data);
+      toast.error(err.response?.data?.message || err.message || "Registration failed");
     }
-  } catch (err) {
-    console.error("❌ Registration Error:", err);
-    console.log("❗ Error response:", err.response?.data);
-    toast.error(err.response?.data?.message || err.message || "Registration failed");
-  }
-};
+  };
+
   return (
     <div
       onClick={() => setShowHotelReg(false)}
@@ -178,7 +192,7 @@ const onSubmitHandler = async (e) => {
                 type="text"
                 placeholder="e.g. Italian, Chinese..."
                 className="border border-gray-200 rounded w-full px-3 py-2.5 mt-1 outline-indigo-500 font-light"
-                required={!isHotel}
+                required
               />
             </div>
           )}

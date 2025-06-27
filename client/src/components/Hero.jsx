@@ -5,7 +5,7 @@ const Hero = () => {
   return (
     <div
       className='relative h-screen bg-center bg-cover bg-no-repeat text-white flex items-center'
-      style={{ backgroundImage: `url(${assets.heroImage})` }}
+      style={{ backgroundImage: `url(https://res.cloudinary.com/dk9y2o5tl/image/upload/v1750816996/wallpaperflare.com_wallpaper_js3nrz.jpg)` }}
     >
       {/* Overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-black/60 via-[#00000077] to-[#00000033]" />

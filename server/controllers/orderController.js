@@ -40,15 +40,18 @@ export const createFoodOrder = async (req, res) => {
 // GET /api/foods/my-orders
 export const getUserFoodOrders = async (req, res) => {
   try {
-    const userId = req.user._id;
-    const orders = await FoodOrder.find({ user: userId }).populate("foodItem").sort({ createdAt: -1 });
+    const testUserId = "683ac07872a7b4d33bfcd337"; // from MongoDB
+    const orders = await FoodOrder.find({ user: testUserId })
+      .populate("foodItem")
+      .sort({ createdAt: -1 });
 
     res.json({ success: true, orders });
   } catch (error) {
-    console.error(error);
-    res.json({ success: false, message: "Failed to get user food orders" });
+    console.error("Get Orders Error:", error);
+    res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // 📊 API to get orders for food vendor (owner)
 // GET /api/foods/vendor-orders

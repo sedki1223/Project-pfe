@@ -100,17 +100,18 @@ const onGenerateTrip = async () => {
   try {
     const response = await axios.post('http://localhost:5000/api/generate-trip', { prompt: FINAL_PROMPT });
 
-    console.log("API response:", response.data); // for debugging
+    console.log("API response:", response.data);
 
     if (
       response.data &&
       typeof response.data.reply === 'string' &&
-      response.data.itinerary && typeof response.data.itinerary === 'object'
+      response.data.itinerary && typeof response.data.itinerary === 'object' &&
+      response.data.tripId
     ) {
-      const aiText = response.data.reply; // Or you can save entire itinerary if you want
+      const { tripId, reply, itinerary } = response.data;
       toast.dismiss(loadingToastId);
       toast.success("Trip generated successfully!");
-      await SaveAiTrip(aiText);
+      await SaveAiTrip(tripId, reply, itinerary);
     } else {
       throw new Error("Invalid response data from API");
     }
@@ -129,19 +130,17 @@ const onGenerateTrip = async () => {
   }
 };
 
+const SaveAiTrip = async (tripId, reply, itinerary) => {
+  await setDoc(doc(db, "AiTrips", tripId), {
+    userSelection: formData,
+    reply,
+    itinerary,
+    userEmail: user?.email,
+    id: tripId,
+  });
+  navigate('/view-trip/' + tripId);
+};
 
-
-
-  const SaveAiTrip = async (tripData) => {
-    const docId = Date.now().toString();
-    await setDoc(doc(db, "AiTrips", docId), {
-      userSelection: formData,
-      tripData,
-      userEmail: user?.email,
-      id: docId,
-    });
-    navigate('/view-trip/' + docId);
-  };
 
   return (
     <div className="px-5 mt-24 max-w-5xl mx-auto">

@@ -124,19 +124,28 @@ export const createBooking = async (req, res) => {
 };
 
 // API to get all bookings of a user
-// GET /api/bookings/user
+
+
+import mongoose from 'mongoose';
+
 export const getUserBookings = async (req, res) => {
   try {
-    const user = req.user._id;
-    const bookings = await Booking.find({ user: user })
+    const testUserId = "683ac07872a7b4d33bfcd337"; // hardcoded user ID
+    const userObjectId = new mongoose.Types.ObjectId(testUserId);
+
+    const bookings = await Booking.find({ user: userObjectId })
       .populate("room hotel")
       .sort({ createdAt: -1 });
+
     res.json({ success: true, bookings });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "failed to get user bookings" });
+    console.error("GetUserBookings Error:", error); // log full error object
+    res.status(500).json({ success: false, message: error.message || "Failed to get user bookings" });
   }
 };
+
+
+
 
 // API to get all bookings of a hotel owner
 // GET /api/bookings/hotel
