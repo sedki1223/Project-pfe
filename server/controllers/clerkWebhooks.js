@@ -4,6 +4,8 @@ export default async function clerkWebhooks(req, res) {
   const { type, data } = req.body;
 
   console.log("📦 Data received:", req.body);
+  console.log("DB name:", mongoose.connection.name);
+  console.log("User collection:", User.collection.name);
 
   try {
     if (type === "user.created") {
