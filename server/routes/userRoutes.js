@@ -1,9 +1,12 @@
-import express from "express";
-import { getUserData, storeRecentlyUsedHotels } from "../controllers/UserController.js";
+import express from 'express';
+import protect from '../controllers/authMiddleware.js';
+import { getUserData, storeRecentlyUsedHotels, storeRecentlyUsedFoods } from '../controllers/UserController.js';
 
 const userRouter = express.Router();
 
-userRouter.get("/",  getUserData);
-userRouter.post("/store-recent-used",  storeRecentlyUsedHotels);
+userRouter.get("/", protect, getUserData);
+userRouter.post('/recently-used-hotels', protect, storeRecentlyUsedHotels);
+userRouter.post('/recently-used-foods', protect, storeRecentlyUsedFoods);
 
 export default userRouter;
+    

@@ -43,9 +43,11 @@ export const AppProvider = ({ children }) => {
 
   const fetchUser = async () => {
     try {
-      const token = await getToken();
+      const token = await getToken(); 
+      console.log("Token:", token);
       const { data } = await axios.get("/api/user", {
         headers: { Authorization: `Bearer ${token}` },
+        withCredentials: true,
       });
       if (data.success) {
         const role = data.role.toLowerCase();

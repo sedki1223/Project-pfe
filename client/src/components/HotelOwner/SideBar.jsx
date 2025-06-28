@@ -1,13 +1,13 @@
-import React from 'react'
-import { assets } from '../../assets/assets'
-import { NavLink } from 'react-router-dom'
+import React from 'react';
+import { assets } from '../../assets/assets';
+import { NavLink } from 'react-router-dom';
 
 const SideBar = () => {
   const sidebarLinks = [
-    { name: "Dashboard", path: "/owner", icon: assets.dashboardIcon },
-    { name: "Add Room", path: "/owner/add-room", icon: assets.addIcon },
-    { name: "List Room", path: "/owner/list-room", icon: assets.listIcon },
-  ]
+    { name: "Dashboard", path: "/hotelowner", icon: assets.dashboardIcon },
+    { name: "Add Room", path: "/hotelowner/add-room", icon: assets.addIcon },
+    { name: "List Room", path: "/hotelowner/list-room", icon: assets.listIcon },
+  ];
 
   return (
     <div className='md:w-64 w-16 border-r h-full text-base border-gray-300 pt-4 flex flex-col transition-all duration-300'>
@@ -28,7 +28,7 @@ const SideBar = () => {
         </NavLink>
       ))}
     </div>
-  )
-}
+  );
+};
 
-export default SideBar
+export default SideBar;

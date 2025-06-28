@@ -24,6 +24,7 @@ import AdminRoute from './components/AdminRoute';
 import AdminDashboard from './components/AdminDashboard';
 import TransportResults from "./components/TransportResults";
 import AllDishes from './pages/AllDishes';
+
 // Hotel owner pages
 import Layout from './pages/HotelOwner/Layout';
 import Dashboard from './pages/HotelOwner/Dashboard';
@@ -33,10 +34,11 @@ import ListeRoom from './pages/HotelOwner/ListeRoom';
 import { Toaster } from 'react-hot-toast';
 import { useAppContext } from './context/AppContext';
 
-
 const App = () => {
   const location = useLocation();
-  const isOwnerPath = location.pathname.startsWith('/owner');
+  const ownerPaths = ['/owner', '/hotelowner', '/admin'];
+  const isOwnerPath = ownerPaths.some(prefix => location.pathname.startsWith(prefix));
+
   const { showHotelReg, showRestaurantReg, setShowRestaurantReg } = useAppContext();
 
   return (
@@ -68,21 +70,23 @@ const App = () => {
           <Route path="/events/:eventId" element={<EventDetails />} />
           <Route path="/dishes/:id" element={<DishDetails />} />
           <Route path="/transport/results" element={<TransportResults />} />
+
           {/* Hotel Owner Pages (nested routes) */}
-          <Route path="/ownerhotel" element={<Layout />}>
+          <Route path="/hotelowner" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="add-room" element={<AddRoom />} />
             <Route path="list-room" element={<ListeRoom />} />
           </Route>
+
+          {/* Admin Pages */}
           <Route
             path="/admin"
             element={
               <AdminRoute>
                 <AdminDashboard />
               </AdminRoute>
-        }
-/>
-          {/* Food Owner Pages (nested routes) */}
+            }
+          />
         </Routes>
       </main>
 

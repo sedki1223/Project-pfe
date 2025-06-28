@@ -5,35 +5,40 @@ import Room from "../models/Room.js";
 // API to create a room
 export const createRoom = async (req, res) => {
   try {
-    const { roomType, price, amenities } = req.body;
+    const { name, capacity, price, amenities } = req.body;
 
-    // Find hotel owned by the authenticated user
+    if (!name || !capacity || !price) {
+      return res.status(400).json({ success: false, message: "Name, capacity and price are required" });
+    }
+
+    const parsedCapacity = Number(capacity);
+    const parsedPrice = Number(price);
+
+    if (isNaN(parsedCapacity) || isNaN(parsedPrice)) {
+      return res.status(400).json({ success: false, message: "Capacity and price must be numbers" });
+    }
+
     const hotel = await Hotel.findOne({ owner: req.user._id });
     if (!hotel) {
       return res.status(404).json({ success: false, message: "Hotel not found" });
     }
 
-    // Upload images to Cloudinary (map returns array of promises)
-    const uploadImagesPromises = req.files.map(async (file) => {
-      const response = await cloudinary.uploader.upload(file.path, {
-        folder: "rooms",
-      });
-      return response.secure_url; // get URL of uploaded image
-    });
-
-    // Await all upload promises
-    const images = await Promise.all(uploadImagesPromises);
+    const images = await Promise.all(
+      req.files.map((file) =>
+        cloudinary.uploader.upload(file.path, { folder: "rooms" }).then((res) => res.secure_url)
+      )
+    );
 
     if (images.length === 0) {
       return res.status(400).json({ success: false, message: "No images uploaded" });
     }
 
-    // Create room document in DB
     const room = await Room.create({
       hotel: hotel._id,
-      roomType,
-      price: Number(price),
-      amenities: JSON.parse(amenities), // parse if amenities sent as JSON string
+      name,
+      capacity: parsedCapacity,
+      price: parsedPrice,
+      amenities: JSON.parse(amenities),
       images,
       isAvailable: true,
     });
@@ -44,6 +49,7 @@ export const createRoom = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
+
 
 // API to get all available rooms with hotel and owner info populated
 export const getRooms = async (req, res) => {

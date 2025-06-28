@@ -6,7 +6,7 @@ import connectDB from "./configs/db.js";
 import connectCloudinary from "./configs/cloudinary.js";
 import { clerkMiddleware } from "@clerk/express";
 import clerkWebhooks from "./controllers/clerkWebhooks.js";
-
+import { addUserToReq } from "./middleware/authUser.js";
 import userRouter from "./routes/userRoutes.js";
 import hotelRouter from "./routes/hotelRoutes.js";
 import roomRouter from "./routes/roomRoutes.js";
@@ -29,15 +29,18 @@ const startServer = async () => {
 
     const app = express();
 
-    app.use(cors());
+    app.use(cors({
+    origin: "http://localhost:5173", // or your Vite/Next URL
+    credentials: true,               // ✅ Allow cookies to pass through
+}));
+    app.use(clerkMiddleware());
     app.use(express.json());
 
-    app.use(clerkMiddleware());
 
     app.post("/api/clerk", clerkWebhooks);
 
     // Your normal routes
-    app.use("/api/user", userRouter);
+    app.use("/api/user", addUserToReq, userRouter);
     app.use("/api/hotel", hotelRouter);
     app.use("/api/rooms", roomRouter);
     app.use("/api/dishes", dishRoutes);

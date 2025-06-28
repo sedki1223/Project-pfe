@@ -98,16 +98,13 @@ const Navbar = () => {
         )}
 
         {user && isOwner && (
-          <Link
-            to="/dashboard"
-            className={`px-4 py-2 rounded-md border ${
-              isScrolled
-                ? "border-gray-700 text-gray-700 hover:bg-gray-100"
-                : "border-white text-white hover:bg-white hover:text-gray-700"
-            } transition-colors`}
-          >
-            Dashboard
-          </Link>
+<Link
+  to="/hotelowner"
+  onClick={() => setIsMenuOpen(false)}
+  className="px-4 py-2 rounded-md border border-gray-700 text-gray-700 hover:bg-gray-100 transition-colors w-full max-w-xs text-center"
+>
+  Dashboard
+</Link>
         )}
       </div>
 
@@ -250,15 +247,13 @@ const Navbar = () => {
           </button>
         )}
 
-        {user && isOwner && (
-          <Link
-            to="/dashboard"
-            onClick={() => setIsMenuOpen(false)}
-            className="px-4 py-2 rounded-md border border-gray-700 text-gray-700 hover:bg-gray-100 transition-colors w-full max-w-xs text-center"
-          >
-            Dashboard
-          </Link>
-        )}
+<Link
+  to="/hotelowner"
+  onClick={() => setIsMenuOpen(false)}
+  className="px-4 py-2 rounded-md border border-gray-700 text-gray-700 hover:bg-gray-100 transition-colors w-full max-w-xs text-center"
+>
+  Dashboard
+</Link>
 
         {!user && (
           <button
