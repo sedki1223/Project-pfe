@@ -37,7 +37,7 @@ const startServer = async () => {
     app.post("/api/clerk", clerkWebhooks);
 
     // Your normal routes
-    app.use("/api/user",addUserToReq, userRouter);
+    app.use("/api/user", userRouter);
     app.use("/api/hotel", hotelRouter);
     app.use("/api/rooms", roomRouter);
     app.use("/api/dishes", dishRoutes);

@@ -1,44 +1,23 @@
-// controllers/authMiddleware.js
-
+import { requireAuth as clerkRequireAuth } from "@clerk/express";
 import User from "../models/User.js";
 
 /**
- * FAKE AUTH MIDDLEWARE for debugging:
- * Skips Clerk validation, injects a hardcoded userId for local testing.
- */
-const fakeAuth = async (req, res, next) => {
-  console.log("[PROTECT] ⚠️ Using FAKE AUTH for local debugging.");
-
-  try {
-    // Fake the Clerk payload
-    req.auth = async () => ({
-      userId: "your_test_user_clerkId", // 👈 replace with a valid clerkId in your DB
-    });
-
-    next();
-  } catch (err) {
-    console.error("[FAKE AUTH] Error:", err);
-    res.status(500).json({ message: "Fake auth failed", error: err.message });
-  }
-};
-
-/**
  * PROTECT MIDDLEWARE:
- * 1️⃣ Uses fakeAuth to inject a clerkId.
+ * 1️⃣ Uses Clerk's requireAuth to enforce JWT presence.
  * 2️⃣ Calls req.auth() to get Clerk userId.
  * 3️⃣ Fetches your MongoDB user by clerkId.
  * 4️⃣ Attaches `req.user` for downstream routes.
  */
 const protect = [
   (req, res, next) => {
-    console.log("[PROTECT] Middleware triggered");
+    console.log('[PROTECT] Middleware triggered');
     next();
   },
 
-  fakeAuth,
+  clerkRequireAuth(),
 
   async (req, res, next) => {
-    console.log("[PROTECT] Fetching user using fakeAuth injected userId...");
+    console.log('[PROTECT] Authorization header:', req.headers.authorization);
 
     try {
       const authStart = Date.now();
@@ -46,8 +25,8 @@ const protect = [
       console.log(`[PROTECT] req.auth() returned in ${Date.now() - authStart}ms:`, auth);
 
       if (!auth || !auth.userId) {
-        console.warn("[PROTECT] No userId in auth payload");
-        return res.status(401).json({ message: "Unauthorized: No userId" });
+        console.warn('[PROTECT] No userId in auth payload');
+        return res.status(401).json({ message: 'Unauthorized: No userId' });
       }
 
       const userFetchStart = Date.now();
@@ -55,23 +34,22 @@ const protect = [
       console.log(`[PROTECT] User from DB fetched in ${Date.now() - userFetchStart}ms:`, user);
 
       if (!user) {
-        console.warn("[PROTECT] User not found in DB");
-        return res.status(401).json({ message: "Unauthorized: User not found" });
+        console.warn('[PROTECT] User not found in DB');
+        return res.status(401).json({ message: 'Unauthorized: User not found' });
       }
 
       req.user = user;
-      console.log("[PROTECT] ✅ req.user attached:", req.user);
+      console.log('[PROTECT] req.user attached:', req.user);
 
-      next();
+      next(); // MUST call next() here to continue middleware chain
     } catch (err) {
-      console.error("[PROTECT] ❌ Error:", err);
-      res.status(500).json({ message: "Server error in protect middleware", error: err.message });
+      console.error('[PROTECT] Error:', err);
+      res.status(500).json({ message: 'Server error in protect middleware' });
     }
-  },
+  }
 ];
 
 export default protect;
-
 
 /**
  * ROLE-BASED ACCESS CONTROL:
