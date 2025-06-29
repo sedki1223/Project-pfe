@@ -4,12 +4,33 @@ import Event from '../models/Events.js'
 
 export const createEvent = async (req, res) => {
   try {
-    const event = await Event.create(req.body)
-    res.status(201).json(event)
+    const {
+      title,
+      description,
+      location,
+      price,
+      date,
+      category,
+      image
+    } = req.body;
+
+    const event = await Event.create({
+      title,
+      description,
+      location,
+      price,
+      date,
+      category,
+      image,
+      attendees: [] // initialize as empty array
+    });
+
+    res.status(201).json(event);
   } catch (err) {
-    res.status(500).json({ error: err.message })
+    res.status(500).json({ error: err.message });
   }
-}
+};
+
 export const getEventAttendees = async (req, res) => {
   try {
     const { id } = req.params

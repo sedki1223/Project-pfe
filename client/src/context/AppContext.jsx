@@ -19,103 +19,74 @@ export const AppProvider = ({ children }) => {
   const [showHotelReg, setShowHotelReg] = useState(false);
   const [showRestaurantReg, setShowRestaurantReg] = useState(false);
   const [rooms, setRooms] = useState([]);
+  const [dishes, setDishes] = useState([]);
 
   const isAdmin = ownerType === "admin";
 
+  // Fetch rooms of the owner
   const fetchRooms = async () => {
-    const start = Date.now();
-    console.log(`[APPCTX] [${new Date().toISOString()}] 🚀 fetchRooms start`);
-
     try {
-      const tokenStart = Date.now();
       const token = await getToken();
-      console.log(`[APPCTX] [${new Date().toISOString()}] 🔑 getToken done in ${Date.now() - tokenStart}ms`);
-      console.log(`[APPCTX] [${new Date().toISOString()}] 🪪 Token: ${token}`);
-
-      console.log(`[APPCTX] [${new Date().toISOString()}] 🌍 GET ${axios.defaults.baseURL}/api/rooms/owner`);
-
-      const axiosStart = Date.now();
       const { data } = await axios.get("/api/rooms/owner", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log(`[APPCTX] [${new Date().toISOString()}] 📡 axios.get /api/rooms/owner done in ${Date.now() - axiosStart}ms`);
-      console.log(`[APPCTX] [${new Date().toISOString()}] 🛬 Response data:`, data);
 
       if (data.success) {
         setRooms(data.rooms);
-        console.log(`[APPCTX] [${new Date().toISOString()}] 🏨 Rooms updated:`, data.rooms);
-      } else {
-        console.warn(`[APPCTX] [${new Date().toISOString()}] ⚠️ fetchRooms response success:false, message: ${data.message}`);
-        toast.error(data.message || "Failed to fetch rooms");
       }
     } catch (error) {
-      console.error(`[APPCTX] [${new Date().toISOString()}] ❌ fetchRooms error:`, error);
       toast.error("Error fetching rooms: " + (error.message || error));
     }
-
-    console.log(`[APPCTX] [${new Date().toISOString()}] 🕒 fetchRooms total duration: ${Date.now() - start}ms`);
   };
 
-  const fetchUser = async () => {
-    const start = Date.now();
-    console.log(`[APPCTX] [${new Date().toISOString()}] 🚀 fetchUser start`);
-
+  // Fetch dishes of the owner (restaurant)
+  const fetchDishes = async () => {
     try {
-      const tokenStart = Date.now();
       const token = await getToken();
-      console.log(`[APPCTX] [${new Date().toISOString()}] 🔑 getToken done in ${Date.now() - tokenStart}ms`);
-      console.log(`[APPCTX] [${new Date().toISOString()}] 🪪 Token: ${token}`);
+      const { data } = await axios.get("/api/dishes/owner", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
 
-      console.log(`[APPCTX] [${new Date().toISOString()}] 🌍 GET ${axios.defaults.baseURL}/api/user`);
+      if (data.success) {
+        setDishes(data.dishes);
+      }
+    } catch (error) {
+      toast.error("Error fetching dishes: " + (error.message || error));
+    }
+  };
 
-      const axiosStart = Date.now();
+  // Fetch user role and owner status
+  const fetchUser = async () => {
+    try {
+      const token = await getToken();
       const { data } = await axios.get("/api/user", {
         headers: { Authorization: `Bearer ${token}` },
       });
-      console.log(`[APPCTX] [${new Date().toISOString()}] 📡 axios.get /api/user done in ${Date.now() - axiosStart}ms`);
-      console.log(`[APPCTX] [${new Date().toISOString()}] 🛬 Response data:`, data);
 
       if (data.success) {
         const role = data.role.toLowerCase();
-        console.log(`[APPCTX] [${new Date().toISOString()}] 👤 User role: ${role}`);
-
-        const ownerStatus = role === "hotelowner" || role === "foodowner";
+        const ownerStatus = role === "hotelowner" || role === "restaurantowner" || role === "admin";
         setIsOwner(ownerStatus);
         setOwnerType(role);
-
-        console.log(`[APPCTX] [${new Date().toISOString()}] ⚙️ isOwner set to: ${ownerStatus}`);
-        console.log(`[APPCTX] [${new Date().toISOString()}] ⚙️ ownerType set to: ${role}`);
-      } else {
-        console.warn(`[APPCTX] [${new Date().toISOString()}] ⚠️ User fetch failed, retrying in 5s`);
-        setTimeout(fetchUser, 5000);
       }
     } catch (error) {
-      console.error(`[APPCTX] [${new Date().toISOString()}] ❌ fetchUser error:`, error);
       toast.error(error.message || "Error fetching user data");
     }
-
-    console.log(`[APPCTX] [${new Date().toISOString()}] 🕒 fetchUser total duration: ${Date.now() - start}ms`);
   };
 
   useEffect(() => {
-    console.log(`[APPCTX] [${new Date().toISOString()}] 🔄 useEffect triggered`);
-    console.log(`[APPCTX] [${new Date().toISOString()}] 🪪 Clerk user:`, user);
-
     if (user) {
       fetchUser();
       fetchRooms();
+      fetchDishes();
     } else {
-      console.log(`[APPCTX] [${new Date().toISOString()}] 🚪 User logged out, resetting context state`);
       setIsOwner(false);
       setOwnerType(null);
       setRooms([]);
+      setDishes([]);
       setShowHotelReg(false);
       setShowRestaurantReg(false);
     }
-
-    return () => {
-      console.log(`[APPCTX] [${new Date().toISOString()}] 🛑 AppProvider unmounted`);
-    };
   }, [user]);
 
   const value = {
@@ -133,16 +104,10 @@ export const AppProvider = ({ children }) => {
     setShowRestaurantReg,
     rooms,
     setRooms,
+    dishes,
+    setDishes,
     axios,
   };
-
-  console.log(`[APPCTX] [${new Date().toISOString()}] ✅ AppProvider rendering with value:`, {
-    currency,
-    isOwner,
-    ownerType,
-    isAdmin,
-    roomsCount: rooms.length,
-  });
 
   return <AppContext.Provider value={value}>{children}</AppContext.Provider>;
 };

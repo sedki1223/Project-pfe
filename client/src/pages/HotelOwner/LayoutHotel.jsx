@@ -4,7 +4,7 @@ import SideBar from '../../components/HotelOwner/SideBar'
 import { Outlet } from 'react-router-dom'
 import { useAppContext } from '@/context/AppContext'
 
-const Layout = () => {
+const LayoutHotel = () => {
   const {isOwner, navigate }= useAppContext()
   useEffect(() => {
     if (!isOwner) {
@@ -24,4 +24,4 @@ const Layout = () => {
   )
 }
 
-export default Layout
+export default LayoutHotel

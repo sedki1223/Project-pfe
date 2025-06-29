@@ -97,20 +97,44 @@ const Navbar = () => {
           </button>
         )}
 
-        {user && isOwner && (
-          <Link
-            to="/hotelowner"
-            className={`px-4 py-2 rounded-md border ${
-              isScrolled
-                ? "border-gray-700 text-gray-700 hover:bg-gray-100"
-                : "border-white text-white hover:bg-white hover:text-gray-700"
-            } transition-colors`}
-          >
-            Dashboard
-          </Link>
-        )}
-      </div>
-
+{user && isOwner && ownerType === "hotelowner" && (
+  <Link
+    to="/hotelowner"
+    className={`px-4 py-2 rounded-md border ${
+      isScrolled
+        ? "border-gray-700 text-gray-700 hover:bg-gray-100"
+        : "border-white text-white hover:bg-white hover:text-gray-700"
+    } transition-colors`}
+  >
+    Dashboard
+  </Link>
+)}
+{user && isOwner && ownerType === "restaurantowner" && (
+  <Link
+    to="/restaurantowner"
+    className={`px-4 py-2 rounded-md border ${
+      isScrolled
+        ? "border-gray-700 text-gray-700 hover:bg-gray-100"
+        : "border-white text-white hover:bg-white hover:text-gray-700"
+    } transition-colors`}
+  >
+    Dashboard
+  </Link>
+)}
+   
+   {user && isOwner && ownerType === "admin" && (
+  <Link
+    to="/admin"
+    className={`px-4 py-2 rounded-md border ${
+      isScrolled
+        ? "border-gray-700 text-gray-700 hover:bg-gray-100"
+        : "border-white text-white hover:bg-white hover:text-gray-700"
+    } transition-colors`}
+  >
+    Dashboard
+  </Link>
+)}
+</div>
       {/* Right side: Login or User Dropdown */}
       <div className="hidden md:flex items-center gap-4 relative">
         {user ? (

@@ -4,7 +4,7 @@ import { assets } from '../../assets/assets';
 import toast from 'react-hot-toast';
 import { useAppContext } from '../../context/AppContext';
 
-const Dashboard = () => {
+const DashboardHotel = () => {
     const { currency, user, axios, getToken } = useAppContext();
 
     const [dashboardData, setDashboardData] = useState({
@@ -102,4 +102,4 @@ const Dashboard = () => {
     );
 };
 
-export default Dashboard;
+export default DashboardHotel;

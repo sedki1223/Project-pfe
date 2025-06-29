@@ -25,10 +25,15 @@ import AdminDashboard from './components/AdminDashboard';
 import TransportResults from "./components/TransportResults";
 import AllDishes from './pages/AllDishes';
 // Hotel owner pages
-import Layout from './pages/HotelOwner/Layout';
-import Dashboard from './pages/HotelOwner/Dashboard';
+import LayoutHotel from './pages/HotelOwner/LayoutHotel';
+import DashboardHotel from './pages/HotelOwner/DashboardHotel';
 import AddRoom from './pages/HotelOwner/AddRoom';
 import ListeRoom from './pages/HotelOwner/ListeRoom';
+// Restaurant owner pages
+import LayoutDish from './pages/RestaurentOwner/LayoutDish';
+import DashboardDish from './pages/RestaurentOwner/DashboardDish';
+import AddDish from './pages/RestaurentOwner/AddDish';
+import ListeDishes from './pages/RestaurentOwner/ListeDishes';
 
 import { Toaster } from 'react-hot-toast';
 import { useAppContext } from './context/AppContext';
@@ -69,11 +74,18 @@ const App = () => {
           <Route path="/dishes/:id" element={<DishDetails />} />
           <Route path="/transport/results" element={<TransportResults />} />
           {/* Hotel Owner Pages (nested routes) */}
-          <Route path="/hotelowner" element={<Layout />}>
-            <Route index element={<Dashboard />} />
+          <Route path="/hotelowner" element={<LayoutHotel />}>
+            <Route index element={<DashboardHotel />} />
             <Route path="add-room" element={<AddRoom />} />
             <Route path="list-room" element={<ListeRoom />} />
           </Route>
+          {/* Restaurant Owner Pages (nested routes) */}
+          <Route path="/restaurantowner" element={<LayoutDish />}>
+            <Route index element={<DashboardDish />} />
+            <Route path="add-dish" element={<AddDish />} />
+            <Route path="list-dish" element={<ListeDishes />} />
+          </Route>
+          
           <Route
             path="/admin"
             element={

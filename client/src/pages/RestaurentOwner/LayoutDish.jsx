@@ -1,10 +1,10 @@
 import React, { useEffect } from 'react'
-import Navbar from '../../components/FoodOwner/Navbar'
-import SideBar from '../../components/FoodOwner/SideBar'
+import Navbar from '../../components/RestaurentOwner/Navbar'
+import SideBar from '../../components/RestaurentOwner/SideBar'
 import { Outlet } from 'react-router-dom'
 import { useAppContext } from '@/context/AppContext'
 
-const Layout = () => {
+const LayoutDish = () => {
   const { isOwner, navigate } = useAppContext()
 
   useEffect(() => {
@@ -28,4 +28,4 @@ const Layout = () => {
   )
 }
 
-export default Layout
+export default LayoutDish

@@ -1,221 +1,202 @@
-import React, { useEffect, useState } from 'react'
-import { useParams, useNavigate } from 'react-router-dom'
-import { assets, facilityIcons, roomCommonData } from '../assets/assets'
-import StarRating from '../components/StarRating'
-import toast from 'react-hot-toast'
-import axios from 'axios'
+import React, { useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { useAppContext } from '@/context/AppContext';
+import StarRating from '../components/StarRating';
+import Title from '../components/Title';
+import toast from 'react-hot-toast';
+import { assets } from '../assets/assets';
 
 const RoomDetails = () => {
-  const { id } = useParams()
-  const navigate = useNavigate()
+  const { id } = useParams();
+  const { axios, getToken, navigate, currency = '$' } = useAppContext();
 
-  const [room, setRoom] = useState(null)
-  const [mainImage, setMainImage] = useState(null)
-  const [loading, setLoading] = useState(true)
+  const [room, setRoom] = useState(null);
+  const [mainImage, setMainImage] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [bookingLoading, setBookingLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  const [checkInDate, setCheckInDate] = useState('')
-  const [checkOutDate, setCheckOutDate] = useState('')
-  const [guests, setGuests] = useState(1)
-  const [isAvailable, setIsAvailable] = useState(false)
+  // Booking form state
+  const [checkIn, setCheckIn] = useState('');
+  const [checkOut, setCheckOut] = useState('');
+  const [guests, setGuests] = useState(1);
 
   useEffect(() => {
     const fetchRoom = async () => {
+      setLoading(true);
       try {
-        const res = await axios.get(`http://localhost:5000/api/rooms/${id}`)
-        setRoom(res.data.room)
-        setMainImage(res.data.room.images[0])
+        const res = await axios.get(`/api/rooms/${id}`);
+        if (res.data.success) {
+          setRoom(res.data.room);
+          setMainImage(res.data.room.images?.[0] || assets.placeholderImage);
+          setError(null);
+        } else {
+          setError(res.data.message || 'Room not found');
+        }
       } catch (err) {
-        toast.error('Room not found')
-        navigate('/')
+        setError('Failed to load room details');
       } finally {
-        setLoading(false)
+        setLoading(false);
       }
+    };
+    fetchRoom();
+  }, [id, axios]);
+
+  const handleBookingSubmit = async (e) => {
+    e.preventDefault();
+    if (!checkIn || !checkOut || guests < 1) {
+      toast.error('Please fill all booking details correctly');
+      return;
     }
 
-    fetchRoom()
-  }, [id, navigate])
+    setBookingLoading(true);
+    try {
+      const token = await getToken();
+      if (!token) {
+        toast.error('You must be logged in to book');
+        navigate('/login');
+        return;
+      }
 
-  const checkRoomAvailability = (e) => {
-    e.preventDefault()
-    if (!checkInDate || !checkOutDate) {
-      toast.error('Please select check-in and check-out dates.')
-      return
-    }
-    if (new Date(checkInDate) >= new Date(checkOutDate)) {
-      toast.error('Check-out date must be after check-in date.')
-      return
-    }
-    setIsAvailable(true)
-    toast.success('Room is available!')
-  }
+      const bookingData = {
+        roomId: room._id,
+        checkIn,
+        checkOut,
+        guests,
+      };
 
-  const onSubmitHandler = (e) => {
-    e.preventDefault()
-    if (!isAvailable) {
-      return checkRoomAvailability(e)
-    }
-    toast.success('Room booked successfully!')
-    navigate('/bookings')
-  }
+      const res = await axios.post(
+        '/api/bookings',
+        bookingData,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-  if (loading) return <div className="min-h-screen flex justify-center items-center">Loading...</div>
-  if (!room) return null
+      if (res.data.success) {
+        toast.success('Booking successful!');
+        navigate('/my-bookings');
+      } else {
+        toast.error(res.data.message || 'Booking failed');
+      }
+    } catch (error) {
+      console.error('Booking error:', error);
+      toast.error('An error occurred while booking');
+    } finally {
+      setBookingLoading(false);
+    }
+  };
+
+  if (loading) return <p className="pt-32 text-center">Loading room details...</p>;
+  if (error) return <p className="pt-32 text-center text-red-600">{error}</p>;
+  if (!room) return <p className="pt-32 text-center">Room not found.</p>;
 
   return (
-    <div className="py-28 md:py-35 px-4 md:px-16 lg:px-24 xl:px-32">
-      <div className="flex flex-col md:flex-row items-start md:items-center gap-2">
-        <h1 className="text-3xl md:text-4xl font-playfair">
-          {room.hotel?.name} <span className="font-inter text-sm">{room.roomType}</span>
-        </h1>
-        <p className="text-xs font-inter py-1.5 px-3 text-white bg-orange-500 rounded-full">20% OFF</p>
-      </div>
+    <div className="py-28 md:py-35 px-4 md:px-16 lg:px-24 xl:px-32 max-w-6xl mx-auto">
+      <Title title={room.hotel?.name || 'Hotel'} subTitle={`Room: ${room.roomType || room.name}`} />
 
-      <div className="flex items-center gap-1 mt-2">
-        <StarRating />
-        <p className="ml-2">200+ reviews</p>
-      </div>
+      {/* Main image */}
+      <img
+        src={mainImage}
+        alt={`${room.roomType || 'Room'} image`}
+        className="w-full max-h-96 object-cover rounded-lg shadow mb-6"
+        onError={(e) => (e.currentTarget.src = assets.placeholderImage)}
+      />
 
-      <div className="flex items-center gap-2 mt-2">
-        <img src={assets.locationIcon} alt="location-icon" />
-        <span>{room.hotel?.address}</span>
-      </div>
-
-      <div className="flex flex-col lg:flex-row mt-6 gap-6">
-        <div className="lg:w-1/2 w-full">
+      {/* Thumbnails */}
+      <div className="flex gap-4 mb-8 overflow-x-auto">
+        {room.images?.map((img, i) => (
           <img
-            src={mainImage || assets.placeholderImage}
-            alt="Room"
-            className="w-full rounded-xl shadow-lg object-cover"
+            key={i}
+            src={img}
+            alt={`Thumbnail ${i + 1}`}
+            onClick={() => setMainImage(img)}
+            className={`w-20 h-20 object-cover rounded cursor-pointer border-2 ${
+              mainImage === img ? 'border-primary' : 'border-transparent'
+            } hover:border-primary transition-all`}
+            onError={(e) => (e.currentTarget.src = assets.placeholderImage)}
           />
-        </div>
-        <div className="grid grid-cols-2 gap-4 lg:w-1/2 w-full">
-          {room.images.slice(1).map((img, i) => (
-            <img
-              key={i}
-              src={img}
-              alt="Room"
-              className={`w-full rounded-xl shadow-md object-cover cursor-pointer ${
-                mainImage === img ? 'outline outline-2 outline-orange-500' : ''
-              }`}
-              onClick={() => setMainImage(img)}
-            />
-          ))}
-        </div>
-      </div>
-
-      <div className="flex flex-col md:flex-row md:justify-between mt-10">
-        <div>
-          <h1 className="text-3xl md:text-4xl font-playfair">Experience Luxury Like Never Before</h1>
-          <div className="flex flex-wrap items-center mt-3 mb-6 gap-4">
-            {room.amenities.map((amenity, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 px-3 py-2 rounded-lg bg-gray-100"
-              >
-                <img src={facilityIcons[amenity] || assets.placeholderIcon} alt={amenity} className="w-5 h-5" />
-                <p className="text-xs">{amenity}</p>
-              </div>
-            ))}
-          </div>
-        </div>
-        <p className="text-2xl font-medium">${room.price}/night</p>
-      </div>
-
-      <form
-        onSubmit={onSubmitHandler}
-        className="flex flex-col md:flex-row flex-wrap items-start md:items-center justify-between bg-white shadow-lg p-6 rounded-xl max-w-6xl mx-auto mt-16"
-      >
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-10 text-gray-500">
-          <div className="flex flex-col">
-            <label htmlFor="checkInDate" className="font-medium">Check-In</label>
-            <input
-              type="date"
-              id="checkInDate"
-              min={new Date().toISOString().split('T')[0]}
-              value={checkInDate}
-              onChange={(e) => setCheckInDate(e.target.value)}
-              className="rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none"
-              required
-            />
-          </div>
-
-          <div className="w-px h-15 bg-gray-300/70 max-md:hidden"></div>
-
-          <div className="flex flex-col">
-            <label htmlFor="checkOutDate" className="font-medium">Check-Out</label>
-            <input
-              type="date"
-              id="checkOutDate"
-              min={checkInDate}
-              value={checkOutDate}
-              disabled={!checkInDate}
-              onChange={(e) => setCheckOutDate(e.target.value)}
-              className="rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none"
-              required
-            />
-          </div>
-
-          <div className="w-px h-15 bg-gray-300/70 max-md:hidden"></div>
-
-          <div className="flex flex-col">
-            <label htmlFor="guests" className="font-medium">Guests</label>
-            <input
-              type="number"
-              id="guests"
-              min="1"
-              value={guests}
-              onChange={(e) => setGuests(e.target.value)}
-              className="max-w-20 rounded border border-gray-300 px-3 py-2 mt-1.5 outline-none"
-              required
-            />
-          </div>
-        </div>
-
-        <button
-          type="submit"
-          className="bg-primary hover:bg-primary-dull active:scale-95 transition-all text-white rounded-md max-md:w-full max-md:mt-6 md:px-25 py-3 md:py-4 text-base cursor-pointer"
-        >
-          {isAvailable ? 'Book Now' : 'Check Availability'}
-        </button>
-      </form>
-
-      <div className="mt-25 space-y-4">
-        {roomCommonData.map((spec, i) => (
-          <div key={i} className="flex items-start gap-2">
-            <img src={spec.icon} alt={`${spec.title}-icon`} className="w-6.5" />
-            <div>
-              <p className="text-base">{spec.title}</p>
-              <p className="text-gray-500">{spec.description}</p>
-            </div>
-          </div>
         ))}
       </div>
 
-      <div className="max-w-3xl border-y border-gray-300 my-15 py-10 text-gray-500">
-        <p>description for the room</p>
-      </div>
-
-      <div className="flex flex-col items-start gap-4">
-        <div className="flex gap-4">
-          <img
-            src={room.hotel?.owner?.image || assets.userPlaceholder}
-            alt="Host"
-            className="h-14 w-14 md:h-18 md:w-18 rounded-full object-cover"
-          />
-          <div>
-            <p className="text-lg md:text-xl">Hosted By {room.hotel?.name}</p>
-            <div className="flex items-center mt-1">
-              <StarRating />
-              <p className="ml-2">+200 reviews</p>
-            </div>
-          </div>
+      {/* Room Details */}
+      <div className="mb-8">
+        <p className="text-gray-700 mb-2">{room.hotel?.address || 'Address not available'}</p>
+        <div className="flex items-center gap-2 mb-4">
+          <StarRating rating={room.rating || 4} />
+          <span className="text-gray-500">200+ reviews</span>
         </div>
-        <button className="px-6 py-2.5 mt-4 rounded text-white bg-primary hover:bg-primary-dull transition-all cursor-pointer">
-          Contact Now
-        </button>
-      </div>
-    </div>
-  )
-}
 
-export default RoomDetails
+        {/* Amenities */}
+        <div className="flex flex-wrap gap-3 mb-6">
+          {room.amenities?.map((amenity, i) => (
+            <span
+              key={i}
+              className="px-3 py-1.5 bg-[#F5F5FF]/70 rounded-lg text-xs text-gray-700"
+            >
+              {amenity}
+            </span>
+          ))}
+        </div>
+
+        <p className="text-xl font-semibold">
+          Price: {currency} {room.price} / night
+        </p>
+      </div>
+
+      {/* Booking Form */}
+      <form
+        onSubmit={handleBookingSubmit}
+        className="bg-white p-6 rounded-xl shadow-md max-w-lg mx-auto"
+      >
+        <h2 className="text-2xl mb-4 font-semibold text-gray-800">Book This Room</h2>
+
+        <label className="block mb-4">
+          <span className="block text-gray-700 font-medium mb-1">Check-In Date</span>
+          <input
+            type="date"
+            value={checkIn}
+            onChange={(e) => setCheckIn(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2 outline-none"
+            required
+          />
+        </label>
+
+        <label className="block mb-4">
+          <span className="block text-gray-700 font-medium mb-1">Check-Out Date</span>
+          <input
+            type="date"
+            value={checkOut}
+            onChange={(e) => setCheckOut(e.target.value)}
+            className="w-full border border-gray-300 rounded px-3 py-2 outline-none"
+            required
+          />
+        </label>
+
+        <label className="block mb-6">
+          <span className="block text-gray-700 font-medium mb-1">Guests</span>
+          <input
+            type="number"
+            min="1"
+            value={guests}
+            onChange={(e) => setGuests(Number(e.target.value))}
+            className="w-full border border-gray-300 rounded px-3 py-2 outline-none"
+            required
+          />
+        </label>
+
+        <button
+          type="submit"
+          disabled={bookingLoading}
+          className={`w-full py-3 rounded bg-primary text-white font-semibold hover:bg-primary-dull transition ${
+            bookingLoading ? 'opacity-60 cursor-not-allowed' : ''
+          }`}
+        >
+          {bookingLoading ? 'Booking...' : 'Book Now'}
+        </button>
+      </form>
+    </div>
+  );
+};
+
+export default RoomDetails;

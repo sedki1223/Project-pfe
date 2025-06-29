@@ -122,12 +122,7 @@ export const createBooking = async (req, res) => {
     res.json({ success: false, message: "failed to create booking" });
   }
 };
-
 // API to get all bookings of a user
-
-
-import mongoose from 'mongoose';
-
 export const getUserBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ user: userObjectId })
@@ -140,9 +135,6 @@ export const getUserBookings = async (req, res) => {
     res.status(500).json({ success: false, message: error.message || "Failed to get user bookings" });
   }
 };
-
-
-
 
 // API to get all bookings of a hotel owner
 // GET /api/bookings/hotel
