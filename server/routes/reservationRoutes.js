@@ -6,13 +6,13 @@ import {
   getMyReservations
 } from '../controllers/reservationController.js'
 import {  requireRole } from '../controllers/authMiddleware.js'
-
+import protect from '../controllers/authMiddleware.js'
 const router = express.Router()
 
 router.use(requireRole(['user']))
 
-router.post('/', bookTransport)
-router.get('/', getMyReservations)
-router.delete('/:id', cancelReservation)
+router.post('/', protect, bookTransport)
+router.get('/', protect, getMyReservations)
+router.delete('/:id', protect, cancelReservation)
 
 export default router

@@ -4,10 +4,12 @@ import { assets, facilityIcons, roomCommonData } from '../assets/assets'
 import StarRating from '../components/StarRating'
 import toast from 'react-hot-toast'
 import axios from 'axios'
+import { useAuth } from '@clerk/clerk-react'
 
 const RoomDetails = () => {
   const { id } = useParams()
   const navigate = useNavigate()
+  const { getToken } = useAuth()
 
   const [room, setRoom] = useState(null)
   const [mainImage, setMainImage] = useState(null)
@@ -21,20 +23,26 @@ const RoomDetails = () => {
   useEffect(() => {
     const fetchRoom = async () => {
       try {
-        const res = await axios.get(`http://localhost:5000/api/rooms/${id}`)
+        const token = await getToken()
+        const res = await axios.get(`http://localhost:5000/api/rooms/${id}`, {
+          headers: { Authorization: `Bearer ${token}` }
+        })
         setRoom(res.data.room)
         setMainImage(res.data.room.images[0])
       } catch (err) {
-        toast.error('Room not found')
-        navigate('/')
+        if (err.response?.status === 401) {
+          toast.error('Unauthorized. Please login again.')
+          navigate('/login')
+        } else {
+          toast.error('Room not found or error occurred.')
+          navigate('/')
+        }
       } finally {
         setLoading(false)
       }
     }
-
     fetchRoom()
-  }, [id, navigate])
-
+  }, [id, navigate, getToken])
   const checkRoomAvailability = (e) => {
     e.preventDefault()
     if (!checkInDate || !checkOutDate) {
@@ -55,7 +63,7 @@ const RoomDetails = () => {
       return checkRoomAvailability(e)
     }
     toast.success('Room booked successfully!')
-    navigate('/bookings')
+    navigate('/my-bookings')
   }
 
   if (loading) return <div className="min-h-screen flex justify-center items-center">Loading...</div>

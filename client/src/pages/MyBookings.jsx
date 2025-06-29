@@ -7,27 +7,33 @@ const MyBookings = () => {
   const { getToken, navigate, axios } = useAppContext()
   const [bookings, setBookings] = useState([])
 
-  const fetchUserBookings = async () => {
-    try {
-      const token = await getToken()
-      if (!token) {
-        navigate('/login')
-        return
-      }
-      const { data } = await axios.get('/api/bookings/user', {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      })
-      if (data.success) {
-        setBookings(data.bookings)
-      } else {
-        console.error('Failed to fetch bookings:', data.message)
-      }
-    } catch (error) {
-      console.error('Error fetching bookings:', error)
+const fetchUserBookings = async () => {
+  try {
+    const token = await getToken()
+    if (!token) {
+      navigate('/login')
+      return
     }
+    console.log("Token:", token)
+    const response = await axios.get('/api/bookings/user', {
+      headers: {
+        Authorization: `Bearer ${token}`
+      }
+    })
+    console.log("Response from /api/bookings/user:", response)
+    const data = response.data
+    if (data.success) {
+      setBookings(data.bookings)
+    } else {
+      console.error('Failed to fetch bookings:', data.message || 'Unknown error')
+    }
+  } catch (error) {
+    const message =
+      error.response?.data?.message || error.message || 'Unknown error'
+    console.error('Error fetching bookings:', message)
   }
+}
+
 
   useEffect(() => {
     fetchUserBookings()
