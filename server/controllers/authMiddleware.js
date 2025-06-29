@@ -1,65 +1,77 @@
-import { requireAuth as clerkRequireAuth } from "@clerk/express";
+// controllers/authMiddleware.js
+
 import User from "../models/User.js";
 
 /**
+ * FAKE AUTH MIDDLEWARE for debugging:
+ * Skips Clerk validation, injects a hardcoded userId for local testing.
+ */
+const fakeAuth = async (req, res, next) => {
+  console.log("[PROTECT] ⚠️ Using FAKE AUTH for local debugging.");
+
+  try {
+    // Fake the Clerk payload
+    req.auth = async () => ({
+      userId: "your_test_user_clerkId", // 👈 replace with a valid clerkId in your DB
+    });
+
+    next();
+  } catch (err) {
+    console.error("[FAKE AUTH] Error:", err);
+    res.status(500).json({ message: "Fake auth failed", error: err.message });
+  }
+};
+
+/**
  * PROTECT MIDDLEWARE:
- * 1️⃣ Uses Clerk's requireAuth to enforce JWT presence.
+ * 1️⃣ Uses fakeAuth to inject a clerkId.
  * 2️⃣ Calls req.auth() to get Clerk userId.
  * 3️⃣ Fetches your MongoDB user by clerkId.
  * 4️⃣ Attaches `req.user` for downstream routes.
  */
 const protect = [
-  clerkRequireAuth(),
+  (req, res, next) => {
+    console.log("[PROTECT] Middleware triggered");
+    next();
+  },
+
+  fakeAuth,
 
   async (req, res, next) => {
-    const start = Date.now();
-    console.log(`\n========== [PROTECT MIDDLEWARE START] ${new Date().toISOString()} ==========`);
+    console.log("[PROTECT] Fetching user using fakeAuth injected userId...");
 
     try {
-      console.log(`[PROTECT] Incoming request for ${req.method} ${req.originalUrl}`);
-      console.log(`[PROTECT] Authorization header: ${req.headers.authorization}`);
-
-      // Call req.auth() to get Clerk authentication payload
       const authStart = Date.now();
       const auth = await req.auth();
-      console.log(`[PROTECT] Clerk req.auth() resolved in ${Date.now() - authStart}ms`);
-      console.log(`[PROTECT] Clerk auth payload:`, auth);
+      console.log(`[PROTECT] req.auth() returned in ${Date.now() - authStart}ms:`, auth);
 
-      // Extract userId from Clerk payload
-      const userId = auth.userId || auth.sub;
-      console.log(`[PROTECT] Clerk userId extracted: ${userId}`);
-
-      if (!userId) {
-        console.warn(`[PROTECT] ❌ No userId in Clerk token`);
-        return res.status(401).json({ message: "Unauthorized: No Clerk userId found" });
+      if (!auth || !auth.userId) {
+        console.warn("[PROTECT] No userId in auth payload");
+        return res.status(401).json({ message: "Unauthorized: No userId" });
       }
 
-      // Fetch user from your MongoDB
       const userFetchStart = Date.now();
-      const user = await User.findOne({ clerkId: userId });
-      console.log(`[PROTECT] User fetch from MongoDB took ${Date.now() - userFetchStart}ms`);
-      console.log(`[PROTECT] User found in DB:`, user);
+      const user = await User.findOne({ clerkId: auth.userId });
+      console.log(`[PROTECT] User from DB fetched in ${Date.now() - userFetchStart}ms:`, user);
 
       if (!user) {
-        console.warn(`[PROTECT] ❌ No user with Clerk ID ${userId} found in DB`);
-        return res.status(401).json({ message: "Unauthorized: User not found in DB" });
+        console.warn("[PROTECT] User not found in DB");
+        return res.status(401).json({ message: "Unauthorized: User not found" });
       }
 
-      // Attach to request for downstream
       req.user = user;
-      console.log(`[PROTECT] ✅ req.user attached to request:`, req.user);
+      console.log("[PROTECT] ✅ req.user attached:", req.user);
 
-      console.log(`[PROTECT] ✅ Completed in ${Date.now() - start}ms`);
-      console.log(`========== [PROTECT MIDDLEWARE END] ${new Date().toISOString()} ==========\n`);
       next();
-    } catch (error) {
-      console.error(`[PROTECT] ❌ Error occurred:`, error);
-      res.status(500).json({ message: "Server error during authentication", error: error.message });
+    } catch (err) {
+      console.error("[PROTECT] ❌ Error:", err);
+      res.status(500).json({ message: "Server error in protect middleware", error: err.message });
     }
   },
 ];
 
 export default protect;
+
 
 /**
  * ROLE-BASED ACCESS CONTROL:
