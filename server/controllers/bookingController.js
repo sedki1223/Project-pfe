@@ -130,9 +130,6 @@ import mongoose from 'mongoose';
 
 export const getUserBookings = async (req, res) => {
   try {
-    const testUserId = "683ac07872a7b4d33bfcd337"; // hardcoded user ID
-    const userObjectId = new mongoose.Types.ObjectId(testUserId);
-
     const bookings = await Booking.find({ user: userObjectId })
       .populate("room hotel")
       .sort({ createdAt: -1 });
@@ -151,9 +148,10 @@ export const getUserBookings = async (req, res) => {
 // GET /api/bookings/hotel
 export const getHotelBookings = async (req, res) => {
   try {
-    const hotel = await Hotel.findOne({ owner: req.auth.userId });
+    // ✅ Use the MongoDB _id, not Clerk userId
+    const hotel = await Hotel.findOne({ owner: req.user._id });
     if (!hotel) {
-      return res.json({ success: false, message: "Hotel not found" });
+      return res.json({ success: false, message: "Hotel not found for this user." });
     }
 
     const bookings = await Booking.find({ hotel: hotel._id })
@@ -163,12 +161,12 @@ export const getHotelBookings = async (req, res) => {
     const totalBookings = bookings.length;
     const totalRevenue = bookings.reduce((acc, booking) => acc + booking.totalPrice, 0);
 
-    res.json({
+    return res.json({
       success: true,
       dashboardData: { bookings, totalBookings, totalRevenue },
     });
   } catch (error) {
-    console.log(error);
-    res.json({ success: false, message: "failed to get hotel bookings" });
+    console.error("[getHotelBookings] Error:", error);
+    res.status(500).json({ success: false, message: "Failed to get hotel bookings." });
   }
 };

@@ -1,95 +1,85 @@
+// controllers/roomController.js (FINAL CLEAN)
+
 import Hotel from "../models/Hotel.js";
 import { v2 as cloudinary } from "cloudinary";
 import Room from "../models/Room.js";
 
-// API to create a room
+// Create Room
 export const createRoom = async (req, res) => {
   try {
-    const { roomType, price, amenities } = req.body;
+    const { roomType, pricePerNight, amenities } = req.body;
 
-    // Find hotel owned by the authenticated user
+    // Validate hotel ownership
     const hotel = await Hotel.findOne({ owner: req.user._id });
     if (!hotel) {
-      return res.status(404).json({ success: false, message: "Hotel not found" });
+      return res.status(404).json({ success: false, message: "Hotel not found for this user." });
     }
 
-    // Upload images to Cloudinary (map returns array of promises)
-    const uploadImagesPromises = req.files.map(async (file) => {
-      const response = await cloudinary.uploader.upload(file.path, {
-        folder: "rooms",
-      });
-      return response.secure_url; // get URL of uploaded image
-    });
+    // Upload images to Cloudinary
+    const uploadPromises = req.files.map(file =>
+      cloudinary.uploader.upload(file.path, { folder: "rooms" })
+    );
+    const uploadResults = await Promise.all(uploadPromises);
+    const images = uploadResults.map(result => result.secure_url);
 
-    // Await all upload promises
-    const images = await Promise.all(uploadImagesPromises);
-
-    if (images.length === 0) {
-      return res.status(400).json({ success: false, message: "No images uploaded" });
+    if (!images.length) {
+      return res.status(400).json({ success: false, message: "No images uploaded." });
     }
 
-    // Create room document in DB
+    // Create Room
     const room = await Room.create({
       hotel: hotel._id,
-      roomType,
-      price: Number(price),
-      amenities: JSON.parse(amenities), // parse if amenities sent as JSON string
+      name: roomType,
+      price: Number(pricePerNight),
+      capacity: 2, // default or adjust as needed
+      amenities: JSON.parse(amenities),
       images,
       isAvailable: true,
     });
 
-    res.status(201).json({ success: true, message: "Room created successfully", room });
+    res.status(201).json({ success: true, message: "Room created successfully.", room });
   } catch (error) {
-    console.error(error);
+    console.error("createRoom error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-// API to get all available rooms with hotel and owner info populated
+// Get all available rooms
 export const getRooms = async (req, res) => {
   try {
     const { hotelName, hotelId } = req.query;
-    let filter = { isAvailable: true };
+    const filter = { isAvailable: true };
 
     if (hotelName) {
       const hotel = await Hotel.findOne({ name: hotelName });
       if (!hotel) {
-        return res.status(404).json({ success: false, message: "Hotel not found" });
+        return res.status(404).json({ success: false, message: "Hotel not found." });
       }
       filter.hotel = hotel._id;
     } else if (hotelId) {
       filter.hotel = hotelId;
     }
 
-    const rooms = await Room.find(filter).populate({
-      path: "hotel",
-      populate: { path: "owner", select: "image" }
-    }).sort({ createdAt: -1 });
+    const rooms = await Room.find(filter)
+      .populate({ path: "hotel", populate: { path: "owner", select: "name image" } })
+      .sort({ createdAt: -1 });
 
     res.json({ success: true, rooms });
   } catch (error) {
-    console.error('Error fetching rooms:', error);
+    console.error("getRooms error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
 
-
-
-// API to get all rooms for hotels owned by the authenticated user
+// Get rooms for hotel owner
 export const getOwnerRooms = async (req, res) => {
   try {
-    console.log("User ID:", req.user._id);
-
-    const hotelData = await Hotel.findOne({ owner: req.user._id });
-    if (!hotelData) {
-      console.log("No hotel found for owner:", req.user._id);
-      return res.status(404).json({ success: false, message: "Hotel not found" });
+    const hotel = await Hotel.findOne({ owner: req.user._id });
+    if (!hotel) {
+      return res.status(404).json({ success: false, message: "Hotel not found for owner." });
     }
-    console.log("Hotel found:", hotelData._id);
 
-    const rooms = await Room.find({ hotel: hotelData._id }).populate("hotel");
-    console.log("Rooms found:", rooms.length);
-
+    const rooms = await Room.find({ hotel: hotel._id }).populate("hotel");
     res.json({ success: true, rooms });
   } catch (error) {
     console.error("getOwnerRooms error:", error);
@@ -97,41 +87,40 @@ export const getOwnerRooms = async (req, res) => {
   }
 };
 
-// API to toggle room availability
+// Toggle room availability
 export const toggleRoomAvailability = async (req, res) => {
   try {
     const { roomId } = req.body;
-    const roomData = await Room.findById(roomId);
-
-    if (!roomData) {
-      return res.status(404).json({ success: false, message: "Room not found" });
+    const room = await Room.findById(roomId);
+    if (!room) {
+      return res.status(404).json({ success: false, message: "Room not found." });
     }
 
-    roomData.isAvailable = !roomData.isAvailable;
-    await roomData.save();
+    room.isAvailable = !room.isAvailable;
+    await room.save();
 
-    res.json({ success: true, message: "Room availability toggled", room: roomData });
+    res.json({ success: true, message: "Room availability toggled.", room });
   } catch (error) {
+    console.error("toggleRoomAvailability error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };
-// API to get a room by ID (with hotel and owner info populated)
-// GET /api/rooms/:id
+
+// Get room by ID
 export const getRoomById = async (req, res) => {
   try {
-    const room = await Room.findById(req.params.id)
-      .populate({
-        path: "hotel",
-        populate: { path: "owner", select: "image name" }
-      });
+    const room = await Room.findById(req.params.id).populate({
+      path: "hotel",
+      populate: { path: "owner", select: "name image" }
+    });
 
     if (!room) {
-      return res.status(404).json({ success: false, message: "Room not found" });
+      return res.status(404).json({ success: false, message: "Room not found." });
     }
 
     res.json({ success: true, room });
   } catch (error) {
-    console.error('Error getting room by ID:', error);
+    console.error("getRoomById error:", error);
     res.status(500).json({ success: false, message: error.message });
   }
 };

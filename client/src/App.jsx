@@ -69,7 +69,7 @@ const App = () => {
           <Route path="/dishes/:id" element={<DishDetails />} />
           <Route path="/transport/results" element={<TransportResults />} />
           {/* Hotel Owner Pages (nested routes) */}
-          <Route path="/ownerhotel" element={<Layout />}>
+          <Route path="/hotelowner" element={<Layout />}>
             <Route index element={<Dashboard />} />
             <Route path="add-room" element={<AddRoom />} />
             <Route path="list-room" element={<ListeRoom />} />

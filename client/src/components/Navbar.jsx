@@ -99,7 +99,7 @@ const Navbar = () => {
 
         {user && isOwner && (
           <Link
-            to="/dashboard"
+            to="/hotelowner"
             className={`px-4 py-2 rounded-md border ${
               isScrolled
                 ? "border-gray-700 text-gray-700 hover:bg-gray-100"
@@ -252,7 +252,7 @@ const Navbar = () => {
 
         {user && isOwner && (
           <Link
-            to="/dashboard"
+            to="/hotelowner"
             onClick={() => setIsMenuOpen(false)}
             className="px-4 py-2 rounded-md border border-gray-700 text-gray-700 hover:bg-gray-100 transition-colors w-full max-w-xs text-center"
           >
