@@ -53,10 +53,13 @@ const startServer = async () => {
     // Groq trip generation route
     app.use('/api/generate-trip', tripRouter);
     
-
+app.use((err, req, res, next) => {
+    console.error('🔥 Uncaught Error:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
+});
     
+app.get("/", (req, res) => res.send("API is working"));
 
-    app.get("/", (req, res) => res.send("API is working"));
 
     const PORT = process.env.PORT || 5000;
     app.listen(PORT, () => console.log(`✅ Server running on port ${PORT}`));
