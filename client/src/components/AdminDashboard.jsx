@@ -2,7 +2,6 @@ import React, { useEffect, useState } from 'react';
 import { toast } from 'react-hot-toast';
 import { useAppContext } from '@/context/AppContext';
 
-// CSV Utility
 const exportCSV = (data, filename) => {
   if (!data || data.length === 0) {
     toast.error('No data to export');
@@ -44,7 +43,7 @@ export default function AdminDashboard() {
   const [eventDateRange, setEventDateRange] = useState({ from: '', to: '' });
   const [transportDateRange, setTransportDateRange] = useState({ from: '', to: '' });
 
-  // Updated eventForm state includes imageFile for file input
+  // Event form state now holds imageFile (FileList) and previews (array of URL strings)
   const [eventForm, setEventForm] = useState({
     title: '',
     description: '',
@@ -52,8 +51,9 @@ export default function AdminDashboard() {
     price: '',
     date: '',
     category: '',
-    imageFile: null,
+    imageFile: null, // FileList from input
   });
+  const [imagePreviews, setImagePreviews] = useState([]); // For preview URLs
 
   const [transportForm, setTransportForm] = useState({
     type: '',
@@ -66,7 +66,6 @@ export default function AdminDashboard() {
 
   const { axios, getToken } = useAppContext();
 
-  // Fetch Functions
   const fetchStats = async () => {
     try {
       const token = await getToken();
@@ -121,13 +120,12 @@ export default function AdminDashboard() {
       const { data } = await axios.get('/api/transport', {
         headers: { Authorization: `Bearer ${token}` },
       });
-      setTransports(Array.isArray(data) ? data : []);
+      setTransports(Array.isArray(data.transports) ? data.transports : []);
     } catch {
       toast.error('Failed to load transports');
     }
   };
 
-  // Fetch all at once
   const fetchAll = () => {
     setLoading(true);
     Promise.all([fetchStats(), fetchUsers(), fetchReservations(), fetchEvents(), fetchTransports()])
@@ -139,20 +137,19 @@ export default function AdminDashboard() {
     fetchAll();
   }, []);
 
-  // Add Event with FormData for image upload
+  // Add Event function with multiple images sent as 'images'
   const addEvent = async () => {
     const token = await getToken();
-
     try {
       const formData = new FormData();
-      formData.append('title', eventForm.title);
-      formData.append('description', eventForm.description);
-      formData.append('location', eventForm.location);
-      formData.append('price', eventForm.price);
-      formData.append('date', eventForm.date);
-      formData.append('category', eventForm.category);
-      if (eventForm.imageFile) {
-        formData.append('image', eventForm.imageFile);
+      for (const [key, value] of Object.entries(eventForm)) {
+        if (key === 'imageFile' && value) {
+          for (const file of value) {
+            formData.append('images', file); // multiple files as 'images'
+          }
+        } else if (value) {
+          formData.append(key, value);
+        }
       }
 
       await axios.post('/api/events/create-event', formData, {
@@ -163,6 +160,8 @@ export default function AdminDashboard() {
       });
 
       toast.success('Event added');
+
+      // Clear form and previews
       setEventForm({
         title: '',
         description: '',
@@ -172,17 +171,18 @@ export default function AdminDashboard() {
         category: '',
         imageFile: null,
       });
+      setImagePreviews([]);
+
       fetchAll();
-    } catch {
-      toast.error('Failed to add event');
+    } catch (error) {
+      toast.error(error?.response?.data?.error || 'Failed to add event');
     }
   };
 
-  // Add Transport
   const addTransport = async () => {
     const token = await getToken();
     try {
-      await axios.post('/api/transport/create-transport', transportForm, {
+      await axios.post('/api/transport', transportForm, {
         headers: { Authorization: `Bearer ${token}` },
       });
       toast.success('Transport added');
@@ -200,22 +200,26 @@ export default function AdminDashboard() {
     }
   };
 
-  // Update User Role
   const updateRole = async (userId, newRole) => {
     try {
-      await axios.patch(`/api/admin/update-user-role/${userId}`, { role: newRole });
+      const token = await getToken();
+      await axios.patch(`/api/admin/update-user-role/${userId}`, { role: newRole }, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setUsers(users.map(u => (u.id === userId ? { ...u, role: newRole } : u)));
-      toast.success('Role updated successfully');
+      toast.success('Role updated');
     } catch {
       toast.error('Failed to update role');
     }
   };
 
-  // Delete Event
-  const deleteEvent = async eventId => {
-    if (!window.confirm('Are you sure you want to delete this event?')) return;
+  const deleteEvent = async (eventId) => {
+    if (!window.confirm('Delete this event?')) return;
     try {
-      await axios.delete(`/api/admin/delete-event/${eventId}`);
+      const token = await getToken();
+      await axios.delete(`/api/admin/delete-event/${eventId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setEvents(events.filter(e => e._id !== eventId));
       toast.success('Event deleted');
     } catch {
@@ -223,11 +227,13 @@ export default function AdminDashboard() {
     }
   };
 
-  // Delete Transport
-  const deleteTransport = async transportId => {
-    if (!window.confirm('Are you sure you want to delete this transport?')) return;
+  const deleteTransport = async (transportId) => {
+    if (!window.confirm('Delete this transport?')) return;
     try {
-      await axios.delete(`/api/admin/delete-transport/${transportId}`);
+      const token = await getToken();
+      await axios.delete(`/api/admin/delete-transport/${transportId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
       setTransports(transports.filter(t => t._id !== transportId));
       toast.success('Transport deleted');
     } catch {
@@ -235,13 +241,46 @@ export default function AdminDashboard() {
     }
   };
 
-  // Filtered lists for search and date filters
+  const handleImageUpdate = async (eventId, imageFile) => {
+    if (!imageFile) return toast.error('Please select an image.');
+    try {
+      const token = await getToken();
+      const formData = new FormData();
+      formData.append('image', imageFile);
+      await axios.patch(`/api/events/${eventId}`, formData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'multipart/form-data',
+        },
+      });
+      toast.success('Image updated');
+      fetchEvents();
+    } catch {
+      toast.error('Failed to update image');
+    }
+  };
+
+  // Handle image selection & generate preview URLs
+  const onImageChange = (e) => {
+    const files = e.target.files;
+    if (files.length === 0) {
+      setImagePreviews([]);
+      setEventForm(prev => ({ ...prev, imageFile: null }));
+      return;
+    }
+    // Generate preview URLs
+    const previews = [];
+    for (let i = 0; i < files.length; i++) {
+      previews.push(URL.createObjectURL(files[i]));
+    }
+    setImagePreviews(previews);
+    setEventForm(prev => ({ ...prev, imageFile: files }));
+  };
+
   const filteredUsers = users.filter(u =>
-    ((u.fullName && u.fullName !== 'null null' ? u.fullName : '') + (u.username || ''))
+    `${u.fullName || ''} ${u.username || ''} ${u.email || ''} ${u.role || ''}`
       .toLowerCase()
-      .includes(userSearch.toLowerCase()) ||
-    (u.email || '').toLowerCase().includes(userSearch.toLowerCase()) ||
-    (u.role || '').toLowerCase().includes(userSearch.toLowerCase())
+      .includes(userSearch.toLowerCase())
   );
 
   const filteredEvents = events.filter(e => {
@@ -250,11 +289,7 @@ export default function AdminDashboard() {
     const eventDate = new Date(e.date);
     const fromDate = eventDateRange.from ? new Date(eventDateRange.from) : null;
     const toDate = eventDateRange.to ? new Date(eventDateRange.to) : null;
-    return (
-      matchesSearch &&
-      (!fromDate || eventDate >= fromDate) &&
-      (!toDate || eventDate <= toDate)
-    );
+    return matchesSearch && (!fromDate || eventDate >= fromDate) && (!toDate || eventDate <= toDate);
   });
 
   const filteredTransports = transports.filter(t => {
@@ -265,18 +300,13 @@ export default function AdminDashboard() {
     const transportDate = new Date(t.date);
     const fromDate = transportDateRange.from ? new Date(transportDateRange.from) : null;
     const toDate = transportDateRange.to ? new Date(transportDateRange.to) : null;
-    return (
-      matchesSearch &&
-      (!fromDate || transportDate >= fromDate) &&
-      (!toDate || transportDate <= toDate)
-    );
+    return matchesSearch && (!fromDate || transportDate >= fromDate) && (!toDate || transportDate <= toDate);
   });
 
   if (loading) return <div className="text-center py-12 text-gray-500">Loading...</div>;
   if (error) return <div className="text-center text-red-500 py-12">{error}</div>;
-
   return (
-    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10">
+    <div className="max-w-7xl mx-auto px-4 py-8 space-y-10 mt-16">
       <h1 className="text-3xl font-bold text-center mb-6">Admin Dashboard</h1>
 
       {/* Statistics Cards */}
@@ -304,15 +334,28 @@ export default function AdminDashboard() {
           {Object.entries(eventForm).map(([key, value]) => {
             if (key === 'imageFile') {
               return (
-                <input
-                  key={key}
-                  type="file"
-                  accept="image/*"
-                  onChange={e =>
-                    setEventForm(prev => ({ ...prev, imageFile: e.target.files[0] }))
-                  }
-                  className="border p-2 rounded"
-                />
+                <div key={key} className="col-span-1 sm:col-span-2">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    multiple
+                    onChange={onImageChange}
+                    className="border p-2 rounded w-full"
+                  />
+                  {/* Preview thumbnails */}
+                  {imagePreviews.length > 0 && (
+                    <div className="flex gap-2 mt-2 overflow-x-auto">
+                      {imagePreviews.map((src, idx) => (
+                        <img
+                          key={idx}
+                          src={src}
+                          alt={`Preview ${idx + 1}`}
+                          className="w-20 h-20 object-cover rounded border"
+                        />
+                      ))}
+                    </div>
+                  )}
+                </div>
               );
             }
 
@@ -439,55 +482,43 @@ export default function AdminDashboard() {
 
       {/* Events Section */}
       <section className="bg-white rounded-2xl shadow p-6">
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 mb-4">
-          <h2 className="text-xl font-bold">Events</h2>
-          <div className="flex flex-wrap gap-2">
-            <input
-              type="text"
-              placeholder="Search events..."
-              value={eventSearch}
-              onChange={e => setEventSearch(e.target.value)}
-              className="border rounded p-2"
-            />
-            <input
-              type="date"
-              value={eventDateRange.from}
-              onChange={e => setEventDateRange(prev => ({ ...prev, from: e.target.value }))}
-              className="border rounded p-2"
-            />
-            <input
-              type="date"
-              value={eventDateRange.to}
-              onChange={e => setEventDateRange(prev => ({ ...prev, to: e.target.value }))}
-              className="border rounded p-2"
-            />
-            <button
-              onClick={() => exportCSV(filteredEvents, 'events.csv')}
-              className="bg-blue-600 text-white px-4 rounded hover:bg-blue-700"
-            >
-              Export CSV
-            </button>
-          </div>
-        </div>
+        <h2 className="text-xl font-bold mb-4">Events</h2>
         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
           {filteredEvents.length > 0 ? (
             filteredEvents.map(event => (
-              <div
-                key={event._id}
-                className="bg-gray-50 rounded-xl p-4 shadow hover:shadow-md transition flex flex-col"
-              >
-                {event.image && (
-                  <img
-                    src={event.image}
-                    alt={event.title}
-                    className="rounded-lg object-cover h-40 w-full mb-2"
-                  />
+              <div key={event._id} className="bg-gray-50 rounded-xl p-4 shadow hover:shadow-md transition flex flex-col">
+                {Array.isArray(event.imageUrl) && event.imageUrl.length > 0 ? (
+                  <img src={event.imageUrl[0]} alt={event.title} className="w-full h-48 object-cover rounded-lg mb-2" />
+                ) : (
+                  <div className="w-full h-48 bg-gray-200 flex items-center justify-center rounded-lg mb-2">
+                    <span className="text-gray-500">No Image</span>
+                  </div>
+                )}
+                {Array.isArray(event.imageUrl) && event.imageUrl.length > 1 && (
+                  <div className="flex gap-2 mb-2 overflow-x-auto">
+                    {event.imageUrl.map((img, idx) => (
+                      <img
+                        key={idx}
+                        src={img}
+                        alt={`${event.title} - ${idx + 1}`}
+                        className="w-16 h-16 object-cover rounded border cursor-pointer hover:scale-105 transition"
+                        onClick={() => {
+                          const reordered = [img, ...event.imageUrl.filter(i => i !== img)];
+                          setEvents(prev => prev.map(e => e._id === event._id ? { ...e, imageUrl: reordered } : e));
+                        }}
+                      />
+                    ))}
+                  </div>
                 )}
                 <h3 className="font-semibold text-lg truncate">{event.title}</h3>
-                <p className="text-sm text-gray-600 mb-1">
-                  {new Date(event.date).toLocaleDateString()}
-                </p>
+                <p className="text-sm text-gray-600">{new Date(event.date).toLocaleDateString()}</p>
                 <p className="text-sm text-gray-500 truncate">{event.location}</p>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={e => handleImageUpdate(event._id, e.target.files[0])}
+                  className="border p-2 rounded mt-2"
+                />
                 <button
                   onClick={() => deleteEvent(event._id)}
                   className="mt-2 text-sm text-red-600 hover:underline self-start"

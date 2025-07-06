@@ -13,6 +13,8 @@ const DishDetails = () => {
   const [dish, setDish] = useState(null);
   const [mainImage, setMainImage] = useState('');
   const [quantity, setQuantity] = useState(1);
+  const [deliveryAddress, setDeliveryAddress] = useState('');
+  const [contactNumber, setContactNumber] = useState('');
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
   const [error, setError] = useState(null);
@@ -58,6 +60,14 @@ const DishDetails = () => {
       toast.error('Quantity must be at least 1');
       return;
     }
+    if (!deliveryAddress.trim()) {
+      toast.error('Please enter a delivery address');
+      return;
+    }
+    if (!contactNumber.trim()) {
+      toast.error('Please enter a contact number');
+      return;
+    }
 
     setLoading(true);
 
@@ -69,24 +79,28 @@ const DishDetails = () => {
         return;
       }
 
-      const response = await fetch('/api/food-orders', {
+      const response = await fetch('/api/food-orders/order', {
         method: 'POST',
         headers: {
-          'Content-Type': 'application/json',
+          'Content-Type': 'application/json',   // important!
           Authorization: `Bearer ${token}`,
         },
         body: JSON.stringify({
           foodId: dish._id,
           quantity: Number(quantity),
+          deliveryAddress,
+          contactNumber,
         }),
       });
 
       const data = await response.json();
 
       if (response.ok && data.success) {
+        
         toast.success('Order placed successfully!');
+        navigate('/my-orders');
       } else {
-        toast.error(data.message || 'Failed to place order');
+        toast.error(data.message || 'Order failed');
       }
     } catch (error) {
       console.error('Order error:', error);
@@ -155,10 +169,15 @@ const DishDetails = () => {
       </div>
 
       {/* Order Form */}
-      <form onSubmit={handleOrder} className="flex flex-col md:flex-row items-start md:items-center justify-between bg-white p-6 rounded-xl shadow-md max-w-lg mx-auto mt-16">
-        <div className="flex flex-col gap-4 w-full md:w-auto md:flex-row md:items-center text-gray-500">
+      <form
+        onSubmit={handleOrder}
+        className="flex flex-col md:flex-row items-start md:items-center justify-between bg-white p-6 rounded-xl shadow-md max-w-lg mx-auto mt-16 gap-4"
+      >
+        <div className="flex flex-col w-full md:w-auto gap-4 text-gray-500">
           <div className="flex flex-col">
-            <label htmlFor="quantity" className="font-medium mb-1">Quantity</label>
+            <label htmlFor="quantity" className="font-medium mb-1">
+              Quantity
+            </label>
             <input
               type="number"
               id="quantity"
@@ -169,12 +188,44 @@ const DishDetails = () => {
               required
             />
           </div>
+
+          <div className="flex flex-col">
+            <label htmlFor="deliveryAddress" className="font-medium mb-1">
+              Delivery Address
+            </label>
+            <input
+              type="text"
+              id="deliveryAddress"
+              value={deliveryAddress}
+              onChange={(e) => setDeliveryAddress(e.target.value)}
+              className="rounded border border-gray-300 px-3 py-2 outline-none"
+              placeholder="Enter delivery address"
+              required
+            />
+          </div>
+
+          <div className="flex flex-col">
+            <label htmlFor="contactNumber" className="font-medium mb-1">
+              Contact Number
+            </label>
+            <input
+              type="tel"
+              id="contactNumber"
+              value={contactNumber}
+              onChange={(e) => setContactNumber(e.target.value)}
+              className="rounded border border-gray-300 px-3 py-2 outline-none"
+              placeholder="Enter contact number"
+              required
+            />
+          </div>
         </div>
 
         <button
           type="submit"
           disabled={loading}
-          className={`bg-primary hover:bg-primary-dull active:scale-95 transition-all text-white rounded-md md:px-10 py-3 md:py-4 text-base cursor-pointer mt-6 md:mt-0 w-full md:w-auto ${loading ? 'opacity-70 cursor-not-allowed' : ''}`}
+          className={`bg-primary hover:bg-primary-dull active:scale-95 transition-all text-white rounded-md md:px-10 py-3 md:py-4 text-base cursor-pointer mt-6 md:mt-0 w-full md:w-auto ${
+            loading ? 'opacity-70 cursor-not-allowed' : ''
+          }`}
         >
           {loading ? 'Ordering...' : 'Order Now'}
         </button>

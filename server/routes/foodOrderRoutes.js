@@ -4,7 +4,8 @@ import {
   getUserFoodOrders,
   getVendorFoodOrders,
   getVendorFoods,
-  toggleFoodAvailability ,
+  toggleFoodAvailability,
+  cancelFoodOrder,
 } from '../controllers/orderController.js';
 import protect from '../controllers/authMiddleware.js';
 
@@ -23,5 +24,8 @@ foodRouter.get('/vendor-foods', protect, getVendorFoods);
 
 // ✏️ Update availability (or other editable fields) for a food item
 foodRouter.patch('/:id', protect, toggleFoodAvailability);
+
+foodRouter.patch('/:orderId/cancel', protect, cancelFoodOrder);
+
 
 export default foodRouter;

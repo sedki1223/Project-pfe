@@ -24,36 +24,38 @@ export const AppProvider = ({ children }) => {
   const isAdmin = ownerType === "admin";
 
   // Fetch rooms of the owner
-  const fetchRooms = async () => {
-    try {
-      const token = await getToken();
-      const { data } = await axios.get("/api/rooms/owner", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+const fetchRooms = async () => {
+  try {
+    const token = await getToken();
+    const { data } = await axios.get("/api/rooms/owner", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      if (data.success) {
-        setRooms(data.rooms);
-      }
-    } catch (error) {
-      toast.error("Error fetching rooms: " + (error.message || error));
+    if (data.success) {
+      setRooms(data.rooms);
     }
-  };
+  } catch (error) {
+    console.error("Error fetching rooms:", error);
+    // Error hidden from user; logged for developer only
+  }
+};
 
-  // Fetch dishes of the owner (restaurant)
-  const fetchDishes = async () => {
-    try {
-      const token = await getToken();
-      const { data } = await axios.get("/api/dishes/owner", {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+// Fetch dishes of the owner (restaurant)
+const fetchDishes = async () => {
+  try {
+    const token = await getToken();
+    const { data } = await axios.get("/api/dishes/owner", {
+      headers: { Authorization: `Bearer ${token}` },
+    });
 
-      if (data.success) {
-        setDishes(data.dishes);
-      }
-    } catch (error) {
-      toast.error("Error fetching dishes: " + (error.message || error));
+    if (data.success) {
+      setDishes(data.dishes);
     }
-  };
+  } catch (error) {
+    console.error("Error fetching dishes:", error);
+    // Error hidden from user; logged for developer only
+  }
+};
 
   // Fetch user role and owner status
   const fetchUser = async () => {

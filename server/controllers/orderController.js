@@ -84,6 +84,7 @@ export const createFoodOrder = async (req, res) => {
 // GET /api/foods/my-orders
 export const getUserFoodOrders = async (req, res) => {
   try {
+    const userObjectId = req.user._id; 
     const orders = await FoodOrder.find({ user: userObjectId })
       .populate("foodItem")
       .sort({ createdAt: -1 });
@@ -171,5 +172,45 @@ export const toggleFoodAvailability = async (req, res) => {
   } catch (error) {
     console.error("[toggleFoodAvailability] Error:", error);
     res.status(500).json({ success: false, message: "Failed to update dish availability." });
+  }
+};
+
+// Add this function to your OrderController.js
+
+export const cancelFoodOrder = async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const userId = req.user._id;
+
+    const order = await FoodOrder.findById(orderId).populate('foodItem');
+    if (!order) {
+      return res.status(404).json({ success: false, message: 'Order not found.' });
+    }
+
+    if (order.user.toString() !== userId.toString()) {
+      return res.status(403).json({ success: false, message: 'Unauthorized action.' });
+    }
+
+    if (order.status === 'cancelled') {
+      return res.status(400).json({ success: false, message: 'Order already cancelled.' });
+    }
+
+    order.status = 'cancelled';
+    await order.save();
+
+    // Optionally send cancellation emails here like you do in booking
+    // Example:
+    /*
+    await sendEmail({
+      to: order.user.email,
+      subject: "Order Cancellation Confirmation",
+      text: `Your order for ${order.foodItem.name} has been cancelled successfully.`,
+    });
+    */
+
+    res.status(200).json({ success: true, message: 'Order cancelled successfully.' });
+  } catch (error) {
+    console.error('Error cancelling food order:', error);
+    res.status(500).json({ success: false, message: 'Internal server error.' });
   }
 };

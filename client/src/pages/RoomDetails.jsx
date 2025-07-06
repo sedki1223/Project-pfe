@@ -14,7 +14,9 @@ const RoomDetails = () => {
   const [mainImage, setMainImage] = useState('');
   const [loading, setLoading] = useState(true);
   const [bookingLoading, setBookingLoading] = useState(false);
+  const [checkingAvailability, setCheckingAvailability] = useState(false);
   const [error, setError] = useState(null);
+  const [isAvailable, setIsAvailable] = useState(false);
 
   // Booking form state
   const [checkIn, setCheckIn] = useState('');
@@ -42,51 +44,102 @@ const RoomDetails = () => {
     fetchRoom();
   }, [id, axios]);
 
-  const handleBookingSubmit = async (e) => {
-    e.preventDefault();
-    if (!checkIn || !checkOut || guests < 1) {
-      toast.error('Please fill all booking details correctly');
+const handleCheckAvailability = async (e) => {
+  e.preventDefault();
+  
+  if (!checkIn || !checkOut || guests < 1) {
+    toast.error('Please fill all booking details correctly');
+    return;
+  }
+
+  setCheckingAvailability(true);
+  
+  try {
+    const token = await getToken();
+    if (!token) {
+      toast.error('You must be logged in to check availability');
+      navigate('/login');
       return;
     }
 
-    setBookingLoading(true);
-    try {
-      const token = await getToken();
-      if (!token) {
-        toast.error('You must be logged in to book');
-        navigate('/login');
-        return;
-      }
-
-      const bookingData = {
+    const res = await axios.post(
+      '/api/bookings/check-availability',
+      {
         roomId: room._id,
-        checkIn,
-        checkOut,
+        checkInDate: checkIn,
+        checkOutDate: checkOut,
         guests,
-      };
-
-      const res = await axios.post(
-        '/api/bookings',
-        bookingData,
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (res.data.success) {
-        toast.success('Booking successful!');
-        navigate('/my-bookings');
-      } else {
-        toast.error(res.data.message || 'Booking failed');
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
       }
-    } catch (error) {
-      console.error('Booking error:', error);
-      toast.error('An error occurred while booking');
-    } finally {
-      setBookingLoading(false);
-    }
-  };
+    );
 
+    if (res.data.success && res.data.isAvailable) {
+      toast.success('Room is available, you can proceed to book now.');
+      setIsAvailable(true);
+    } else if (res.data.success && !res.data.isAvailable) {
+      toast.error('Room is not available for these dates.');
+      setIsAvailable(false);
+    } else {
+      toast.error(res.data.message || 'Error checking availability.');
+      setIsAvailable(false);
+    }
+  } catch (error) {
+    console.error('Availability check error:', error);
+    toast.error('An error occurred while checking availability.');
+    setIsAvailable(false);
+  } finally {
+    setCheckingAvailability(false);
+  }
+};
+
+
+ const handleBookingSubmit = async (e) => {
+  e.preventDefault();
+  if (!checkIn || !checkOut || guests < 1) {
+    toast.error('Please fill all booking details correctly');
+    return;
+  }
+
+  setBookingLoading(true);
+  try {
+    const token = await getToken();
+    if (!token) {
+      toast.error('You must be logged in to book');
+      navigate('/login');
+      return;
+    }
+
+    const bookingData = {
+      room: room._id,
+      checkInDate: checkIn,
+      checkOutDate: checkOut,
+      guests,
+    };
+
+    const res = await axios.post(
+      '/api/bookings/book',
+      bookingData,
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    if (res.data.success) {
+      
+      toast.success('Booking successful!');
+      navigate('/my-bookings');
+    } else {
+      toast.error(res.data.message || 'Booking failed');
+    }
+  } catch (error) {
+    console.error('Booking error:', error);
+    toast.error('An error occurred while booking');
+  } finally {
+    setBookingLoading(false);
+  }
+};
   if (loading) return <p className="pt-32 text-center">Loading room details...</p>;
   if (error) return <p className="pt-32 text-center text-red-600">{error}</p>;
   if (!room) return <p className="pt-32 text-center">Room not found.</p>;
@@ -146,10 +199,12 @@ const RoomDetails = () => {
 
       {/* Booking Form */}
       <form
-        onSubmit={handleBookingSubmit}
+        onSubmit={isAvailable ? handleBookingSubmit : handleCheckAvailability}
         className="bg-white p-6 rounded-xl shadow-md max-w-lg mx-auto"
       >
-        <h2 className="text-2xl mb-4 font-semibold text-gray-800">Book This Room</h2>
+        <h2 className="text-2xl mb-4 font-semibold text-gray-800">
+          {isAvailable ? 'Complete Your Booking' : 'Check Availability'}
+        </h2>
 
         <label className="block mb-4">
           <span className="block text-gray-700 font-medium mb-1">Check-In Date</span>
@@ -187,12 +242,18 @@ const RoomDetails = () => {
 
         <button
           type="submit"
-          disabled={bookingLoading}
+          disabled={bookingLoading || checkingAvailability}
           className={`w-full py-3 rounded bg-primary text-white font-semibold hover:bg-primary-dull transition ${
-            bookingLoading ? 'opacity-60 cursor-not-allowed' : ''
+            (bookingLoading || checkingAvailability) ? 'opacity-60 cursor-not-allowed' : ''
           }`}
         >
-          {bookingLoading ? 'Booking...' : 'Book Now'}
+          {isAvailable
+            ? bookingLoading
+              ? 'Booking...'
+              : 'Book Now'
+            : checkingAvailability
+            ? 'Checking...'
+            : 'Check Availability'}
         </button>
       </form>
     </div>

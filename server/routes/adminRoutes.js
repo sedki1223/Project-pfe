@@ -19,7 +19,7 @@ router.use( requireRole(['admin']))
 router.get('/stats',protect ,getStats)
 router.get('/users',protect , getUsers)
 router.delete('/delete-event/:id',protect , deleteEvent)
-router.delete('/delete-transport/:id',protect , deleteTransport)
+router.delete('/delete-transport/:id' ,protect , deleteTransport)
 router.patch('/update-user-role/:userId',protect , updateUserRole)
 router.get('/reservations',protect , getAllReservations)
 

@@ -23,6 +23,8 @@ import EventDetails from './components/EventDetails';
 import AdminRoute from './components/AdminRoute';
 import AdminDashboard from './components/AdminDashboard';
 import TransportResults from "./components/TransportResults";
+import TransportDetails from "./pages/TransportDetails";
+import TransportBookings from './pages/TransportBookings';
 import AllDishes from './pages/AllDishes';
 // Hotel owner pages
 import LayoutHotel from './pages/HotelOwner/LayoutHotel';
@@ -62,6 +64,7 @@ const App = () => {
           <Route path="/rooms/:id" element={<RoomDetails />} />
           <Route path="/my-bookings" element={<MyBookings />} />
           <Route path="/my-orders" element={<DeliveryTracking />} />
+          <Route path="/transport-bookings" element={<TransportBookings />} />
           <Route path="/dishes" element={<AllDishes/>} />
           <Route path="/about" element={<About />} />
           <Route path="/transportation" element={<Transportation />} />
@@ -73,6 +76,7 @@ const App = () => {
           <Route path="/events/:eventId" element={<EventDetails />} />
           <Route path="/dishes/:id" element={<DishDetails />} />
           <Route path="/transport/results" element={<TransportResults />} />
+          <Route path="/transport/:id" element={<TransportDetails />} />
           {/* Hotel Owner Pages (nested routes) */}
           <Route path="/hotelowner" element={<LayoutHotel />}>
             <Route index element={<DashboardHotel />} />

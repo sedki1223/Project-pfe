@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom';
 const AiPlanner = () => {
   return (
     <section className="mt-24 mb-24 px-6 lg:px-56">
-      <div className="flex flex-col items-center text-center gap-8">
+      <div className="flex flex-col items-center text-center gap-8 max-w-3xl mx-auto py-12 mt-12">
         <h1 className="text-4xl sm:text-5xl font-extrabold leading-tight">
           <span className="text-[#f56551]">Discover Your Next Adventure With AI:</span><br />
           Personalized Itineraries at Your Fingertips
