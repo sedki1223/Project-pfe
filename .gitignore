@@ -1,0 +1,30 @@
+﻿# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Firebase / service-account credentials
+**/*serviceAccount*.json
+**/*firebaseAdmin*.json
+**/*firebase*.json
+
+# Uploads / generated files
+server/uploads/
+
+# Build output
+dist/
+build/
+coverage/
+
+# Logs
+*.log
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+server/uploads/*
