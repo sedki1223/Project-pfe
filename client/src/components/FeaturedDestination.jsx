@@ -3,6 +3,8 @@ import Title from './Title'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
+
 const NO_IMAGE = 'https://via.placeholder.com/400x300?text=No+Image'
 
 const FeaturedDestination = () => {
@@ -13,7 +15,7 @@ const FeaturedDestination = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/rooms') // adjust endpoint if needed
+        const res = await axios.get(`${API_BASE_URL}/api/rooms`) // adjust endpoint if needed
         setRooms(res.data.rooms || res.data) // safety fallback
       } catch (err) {
         console.error('Error fetching rooms:', err)
