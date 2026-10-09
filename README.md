@@ -2,7 +2,7 @@
 
 Visit Tozeur is a full-stack travel and hospitality web application focused on helping users explore and plan visits to Tozeur, Tunisia. The application brings together travel itinerary generation, accommodation and room discovery, bookings, restaurants and food orders, transport, events, and role-based management features.
 
-> Deployment note: the frontend deployment is being prepared for Vercel. Add the public deployment URL here once the final production structure and API endpoint are confirmed.
+> Deployment: the frontend is intended for Vercel. Add the live URL after the production API origin and final deployment structure are confirmed.
 
 ## Technology stack
 
@@ -105,7 +105,7 @@ The client also contains integrations that may require provider-specific public 
 - `CLERK_SECRET_KEY` — Clerk server secret used by authenticated backend integrations.
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` — Cloudinary credentials.
 - `GROQ_API_KEY` — Groq API key for itinerary generation.
-- `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, `FIREBASE_PRIVATE_KEY` — Firebase Admin service-account fields. Store the private key securely; if supplied as a single-line environment value, encode line breaks as `\\n`.
+- `FIREBASE_SERVICE_ACCOUNT_JSON` — optional JSON string containing the Firebase Admin service-account object; alternatively use `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY`. Store credentials securely; if the private key is supplied as a single-line environment value, encode line breaks as `\\n`.
 
 Some integrations may require additional variables. Do not put server secrets in `VITE_*` variables, because Vite exposes those values to browser code.
 

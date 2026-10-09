@@ -4,10 +4,7 @@ import mongoose from 'mongoose';
 const connectDB = async () => {
   try {
     mongoose.set('bufferCommands', false);
-    await mongoose.connect(process.env.MONGODB_URI, {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    });
+    await mongoose.connect(process.env.MONGODB_URI);
     console.log('✅ MongoDB Connected to DB:', mongoose.connection.name);
   } catch (error) {
     console.error('❌ MongoDB connection failed:', error);
