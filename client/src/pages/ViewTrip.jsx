@@ -175,7 +175,7 @@ END:VCALENDAR`;
   };
 
   return (
-    <div className="max-w-7xl mx-auto p-6 space-y-14 mt-12">
+    <div className="max-w-7xl mx-auto p-6 space-y-14 mt-16"> 
       {/* Hero Banner */}
       <div className="relative rounded-xl overflow-hidden shadow-lg">
         <img
