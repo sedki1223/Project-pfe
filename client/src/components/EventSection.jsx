@@ -3,6 +3,8 @@ import Title from './Title'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
+
 const NO_IMAGE = 'https://via.placeholder.com/400x300?text=No+Image'
 
 const EventSection = () => {
@@ -13,7 +15,7 @@ const EventSection = () => {
   useEffect(() => {
     const fetchEvents = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/events') // Adjust endpoint if needed
+        const res = await axios.get(`${API_BASE_URL}/api/events`) // Adjust endpoint if needed
         setEvents(res.data || []) // fallback to empty array
       } catch (err) {
         console.error('Error fetching events:', err)
