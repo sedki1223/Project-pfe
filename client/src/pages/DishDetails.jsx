@@ -5,6 +5,8 @@ import toast from 'react-hot-toast';
 import { useAuth } from '@clerk/clerk-react';  // Clerk auth hook
 import { assets } from '../assets/assets';
 
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
+
 const DishDetails = () => {
   const { id } = useParams();
   const [dish, setDish] = useState(null);
@@ -19,7 +21,7 @@ const DishDetails = () => {
     const fetchDish = async () => {
       try {
         setFetching(true);
-        const res = await fetch(`http://localhost:5000/api/dishes/${id}`);
+        const res = await fetch(`${API_BASE_URL}/api/dishes/${id}`);
         const data = await res.json();
 
         if (res.ok && data.success) {
