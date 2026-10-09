@@ -4,9 +4,9 @@ import { NavLink } from 'react-router-dom'
 
 const SideBar = () => {
   const sidebarLinks = [
-    { name: "Dashboard", path: "/owner", icon: assets.dashboardIcon },
-    { name: "Add Dish", path: "/owner/add-dish", icon: assets.addIcon },
-    { name: "List Dishes", path: "/owner/list-dish", icon: assets.listIcon },
+    { name: "Dashboard", path: "/restaurantowner", icon: assets.dashboardIcon },
+    { name: "Add Dish", path: "/restaurantowner/add-dish", icon: assets.addIcon },
+    { name: "List Dishes", path: "/restaurantowner/list-dish", icon: assets.listIcon },
   ]
 
   return (

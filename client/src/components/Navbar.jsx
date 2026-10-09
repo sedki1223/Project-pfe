@@ -20,6 +20,7 @@ const Navbar = () => {
   const [showUserDropdown, setShowUserDropdown] = useState(false);
 
   const { openSignIn, signOut } = useClerk();
+  const clerk = useClerk(); 
   const { user } = useUser();
   const navigate = useNavigate();
   const location = useLocation();
@@ -46,6 +47,47 @@ const Navbar = () => {
   const handleSignOut = () => {
     signOut(() => navigate("/"));
   };
+
+  const UserDropdown = () => (
+    <div className="absolute top-16 right-0 bg-white border shadow-md rounded-md w-48 z-50">
+      <Link
+        to="/my-bookings"
+        className="block px-4 py-2 text-sm hover:bg-gray-100"
+        onClick={() => setShowUserDropdown(false)}
+      >
+        My Bookings
+      </Link>
+      <Link
+        to="/my-orders"
+        className="block px-4 py-2 text-sm hover:bg-gray-100"
+        onClick={() => setShowUserDropdown(false)}
+      >
+        My Orders
+      </Link>
+      <Link
+        to="/transport-bookings"
+        className="block px-4 py-2 text-sm hover:bg-gray-100"
+        onClick={() => setShowUserDropdown(false)}
+      >
+        My Transport Bookings
+      </Link>
+      <button
+        onClick={() => {
+          setShowUserDropdown(false);
+          clerk.openUserProfile();
+        }}
+        className="w-full text-left px-4 py-2 text-sm hover:bg-gray-100"
+      >
+        Manage Account
+      </button>
+      <button
+        onClick={handleSignOut}
+        className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
+      >
+        Sign Out
+      </button>
+    </div>
+  );
 
   return (
     <nav
@@ -97,14 +139,41 @@ const Navbar = () => {
           </button>
         )}
 
-        {user && isOwner && (
-<Link
-  to="/hotelowner"
-  onClick={() => setIsMenuOpen(false)}
-  className="px-4 py-2 rounded-md border border-gray-700 text-gray-700 hover:bg-gray-100 transition-colors w-full max-w-xs text-center"
->
-  Dashboard
-</Link>
+        {user && isOwner && ownerType === "hotelowner" && (
+          <Link
+            to="/hotelowner"
+            className={`px-4 py-2 rounded-md border ${
+              isScrolled
+                ? "border-gray-700 text-gray-700 hover:bg-gray-100"
+                : "border-white text-white hover:bg-white hover:text-gray-700"
+            } transition-colors`}
+          >
+            Dashboard
+          </Link>
+        )}
+        {user && isOwner && ownerType === "restaurantowner" && (
+          <Link
+            to="/restaurantowner"
+            className={`px-4 py-2 rounded-md border ${
+              isScrolled
+                ? "border-gray-700 text-gray-700 hover:bg-gray-100"
+                : "border-white text-white hover:bg-white hover:text-gray-700"
+            } transition-colors`}
+          >
+            Dashboard
+          </Link>
+        )}
+        {user && isOwner && ownerType === "admin" && (
+          <Link
+            to="/admin"
+            className={`px-4 py-2 rounded-md border ${
+              isScrolled
+                ? "border-gray-700 text-gray-700 hover:bg-gray-100"
+                : "border-white text-white hover:bg-white hover:text-gray-700"
+            } transition-colors`}
+          >
+            Dashboard
+          </Link>
         )}
       </div>
 
@@ -118,37 +187,7 @@ const Navbar = () => {
               className="w-10 h-10 rounded-full cursor-pointer"
               onClick={toggleUserDropdown}
             />
-            {showUserDropdown && (
-              <div className="absolute right-0 top-12 bg-white border shadow-md rounded-md w-48 z-50">
-                <Link
-                  to="/my-bookings"
-                  className="block px-4 py-2 text-sm hover:bg-gray-100"
-                  onClick={() => setShowUserDropdown(false)}
-                >
-                  My Bookings
-                </Link>
-                <Link
-                  to="/my-orders"
-                  className="block px-4 py-2 text-sm hover:bg-gray-100"
-                  onClick={() => setShowUserDropdown(false)}
-                >
-                  My Orders
-                </Link>
-                <a
-                  href="/user"
-                  className="block px-4 py-2 text-sm hover:bg-gray-100"
-                  onClick={() => setShowUserDropdown(false)}
-                >
-                  Manage Account
-                </a>
-                <button
-                  onClick={handleSignOut}
-                  className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
-                >
-                  Sign Out
-                </button>
-              </div>
-            )}
+            {showUserDropdown && <UserDropdown />}
           </div>
         ) : (
           <button
@@ -161,12 +200,12 @@ const Navbar = () => {
       </div>
 
       {/* Mobile menu toggle */}
-      <div className="flex items-center gap-3 md:hidden">
+      <div className="flex items-center gap-3 md:hidden relative">
         {user && (
           <img
             src={user.imageUrl}
             alt="avatar"
-            className="w-9 h-9 rounded-full"
+            className="w-9 h-9 rounded-full cursor-pointer"
             onClick={toggleUserDropdown}
           />
         )}
@@ -176,40 +215,8 @@ const Navbar = () => {
           alt="menu"
           className={`${isScrolled ? "invert" : ""} h-4`}
         />
+        {showUserDropdown && <UserDropdown />}
       </div>
-
-      {/* Mobile dropdown user menu */}
-      {showUserDropdown && (
-        <div className="absolute top-16 right-4 bg-white border shadow-md rounded-md w-48 z-50 md:hidden">
-          <Link
-            to="/my-bookings"
-            className="block px-4 py-2 text-sm hover:bg-gray-100"
-            onClick={() => setShowUserDropdown(false)}
-          >
-            My Bookings
-          </Link>
-          <Link
-            to="/my-orders"
-            className="block px-4 py-2 text-sm hover:bg-gray-100"
-            onClick={() => setShowUserDropdown(false)}
-          >
-            My Orders
-          </Link>
-          <a
-            href="/user"
-            className="block px-4 py-2 text-sm hover:bg-gray-100"
-            onClick={() => setShowUserDropdown(false)}
-          >
-            Manage Account
-          </a>
-          <button
-            onClick={handleSignOut}
-            className="w-full text-left px-4 py-2 text-sm text-red-500 hover:bg-gray-100"
-          >
-            Sign Out
-          </button>
-        </div>
-      )}
 
       {/* Mobile menu */}
       <div
@@ -247,13 +254,15 @@ const Navbar = () => {
           </button>
         )}
 
-<Link
-  to="/hotelowner"
-  onClick={() => setIsMenuOpen(false)}
-  className="px-4 py-2 rounded-md border border-gray-700 text-gray-700 hover:bg-gray-100 transition-colors w-full max-w-xs text-center"
->
-  Dashboard
-</Link>
+        {user && isOwner && (
+          <Link
+            to="/hotelowner"
+            onClick={() => setIsMenuOpen(false)}
+            className="px-4 py-2 rounded-md border border-gray-700 text-gray-700 hover:bg-gray-100 transition-colors w-full max-w-xs text-center"
+          >
+            Dashboard
+          </Link>
+        )}
 
         {!user && (
           <button
