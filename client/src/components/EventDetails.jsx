@@ -17,7 +17,7 @@ import {
 import { useAppContext } from "../context/AppContext";
 import toast from "react-hot-toast";
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:5000";
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || "http://localhost:5000").replace(/\/$/, "");
 
 // Simple Error Boundary for React 16+
 class ErrorBoundary extends React.Component {
