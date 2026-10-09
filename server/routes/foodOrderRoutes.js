@@ -4,25 +4,28 @@ import {
   getUserFoodOrders,
   getVendorFoodOrders,
   getVendorFoods,
-  updateFoodAvailability,
+  toggleFoodAvailability,
+  cancelFoodOrder,
 } from '../controllers/orderController.js';
-import protect, { requireRole } from '../controllers/authMiddleware.js';
+import protect from '../controllers/authMiddleware.js';
 
 const foodRouter = express.Router();
 
 // 🛒 Place a food order
-foodRouter.post('/order', protect, requireRole(["user"]), createFoodOrder);
-
+foodRouter.post('/order', protect, createFoodOrder);
 // 👤 Get logged-in user's food orders
-foodRouter.get('/my-orders', protect, requireRole(["user"]), getUserFoodOrders);
+foodRouter.get('/my-orders', protect, getUserFoodOrders);
 
 // 🧑‍🍳 Get all food orders for the vendor (owner)
-foodRouter.get('/vendor-orders', protect, requireRole(["restaurantOwner"]), getVendorFoodOrders);
+foodRouter.get('/vendor-orders', protect, getVendorFoodOrders);
 
 // 🍽️ Get all foods for the vendor (owner)
-foodRouter.get('/vendor-foods', protect, requireRole(["restaurantOwner"]), getVendorFoods);
+foodRouter.get('/vendor-foods', protect, getVendorFoods);
 
 // ✏️ Update availability (or other editable fields) for a food item
-foodRouter.patch('/:id', protect, requireRole(["restaurantOwner"]), updateFoodAvailability);
+foodRouter.patch('/:id', protect, toggleFoodAvailability);
+
+foodRouter.patch('/:orderId/cancel', protect, cancelFoodOrder);
+
 
 export default foodRouter;
