@@ -29,10 +29,26 @@ const startServer = async () => {
 
     const app = express();
 
-    app.use(cors({
-    origin: "http://localhost:5173", // or your Vite/Next URL
-    credentials: true,               // ✅ Allow cookies to pass through
-}));
+    const allowedOrigins = new Set([
+      "http://localhost:5173",
+      ...(process.env.CLIENT_URL || "")
+        .split(",")
+        .map((origin) => origin.trim())
+        .filter(Boolean),
+    ]);
+
+    app.use(
+      cors({
+        origin: (origin, callback) => {
+          // Requests without an Origin header include server-to-server calls.
+          if (!origin || allowedOrigins.has(origin)) {
+            return callback(null, true);
+          }
+          return callback(null, false);
+        },
+        credentials: true,
+      })
+    );
     app.use(clerkMiddleware());
     app.use(express.json());
 

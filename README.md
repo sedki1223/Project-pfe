@@ -101,6 +101,7 @@ The client also contains integrations that may require provider-specific public 
 ### Server — `server/.env`
 
 - `PORT` — optional API port; defaults to `5000`.
+- `CLIENT_URL` — optional comma-separated list of allowed frontend origins for production CORS, such as the Vercel site URL. Local development at `http://localhost:5173` remains allowed.
 - `MONGODB_URI` — MongoDB connection string.
 - `CLERK_SECRET_KEY` — Clerk server secret used by authenticated backend integrations.
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` — Cloudinary credentials.
