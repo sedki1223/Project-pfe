@@ -31,6 +31,8 @@ const SelectTravelersList = [
   { id: 3, title: 'Family', desc: 'Traveling with kids and all', icon: '👨‍👩‍👧‍👦' },
 ];
 
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
+
 const CreateTrip = () => {
   const navigate = useNavigate();
   const [formData, setFormData] = useState({
@@ -98,7 +100,7 @@ const onGenerateTrip = async () => {
   const FINAL_PROMPT = `Plan a trip for someone interested in ${lookingFor}, staying ${days} days, with a ${budget?.title} budget, traveling as ${travelers?.title}.`;
 
   try {
-    const response = await axios.post('http://localhost:5000/api/generate-trip', { prompt: FINAL_PROMPT });
+    const response = await axios.post(`${API_BASE_URL}/api/generate-trip`, { prompt: FINAL_PROMPT });
 
     console.log("API response:", response.data);
 
