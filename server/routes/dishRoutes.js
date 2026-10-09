@@ -3,33 +3,43 @@ import {
   createDish,
   getDishes,
   getOwnerDishes,
-  updateDishAvailability,
-  getDishById
+  toggleDishAvailability,
+  getDishById,
 } from "../controllers/dishController.js";
+import protect, { requireRole } from "../controllers/authMiddleware.js";
+import upload from "../middleware/uploadMiddleware.js";
 
-import upload from '../middleware/uploadMiddleware.js';
-import {  requireRole } from '../controllers/authMiddleware.js';
-import protect from '../controllers/authMiddleware.js';
+const dishRouter = express.Router();
 
-const router = express.Router();
+// ✅ Public: Get all available dishes
+// GET /api/dishes/
+dishRouter.get("/", getDishes);
 
+// ✅ Authenticated Owner: Get all dishes created by the owner
+// GET /api/dishes/owner
+dishRouter.get("/owner", protect, requireRole(["restaurantOwner"]), getOwnerDishes);
 
+// ✅ Authenticated Owner: Create a new dish (with image upload)
+// POST /api/dishes/create
+dishRouter.post(
+  "/create",
+  protect,
+  requireRole(["restaurantOwner"]),
+  upload.array("images"), // ⚠️ Ensure single image upload unless you support multiple
+  createDish
+);
 
-// ✅ Public Route: Get all dishes (optional if you want to expose everything)
-router.get("/", getDishes);
+// ✅ Authenticated Owner: Toggle dish availability
+// PUT /api/dishes/:id/availability
+dishRouter.put(
+  "/:id/availability",
+  protect,
+  requireRole(["restaurantOwner"]),
+  toggleDishAvailability
+);
 
-// ✅ Authenticated Route: Get all dishes created by the logged-in user
-router.get("/my-dishes", protect, requireRole(["restaurantOwner"]), getOwnerDishes);
+// ✅ Public: Get dish by ID
+// GET /api/dishes/:id
+dishRouter.get("/:id", getDishById);
 
-// ✅ Authenticated Route: Create a new dish (with image upload)
-router.post("/create", protect, requireRole(["restaurantOwner"]), createDish);
-
-
-// ✅ Authenticated Route: Update dish availability (toggle on/off)
-router.put("/:id/availability", protect, requireRole(["restaurantOwner"]), updateDishAvailability);
-
-router.get("/:id", getDishById);
-
-
-
-export default router;
+export default dishRouter;
