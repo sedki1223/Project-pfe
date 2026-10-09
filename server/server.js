@@ -19,6 +19,7 @@ import eventRoutes from './routes/eventsRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import reservationRoutes from './routes/reservationRoutes.js'
 import dishRoutes from "./routes/dishRoutes.js";
+import transportBookingRoutes from "./routes/transportBookingRoutes.js";
 
 
 
@@ -65,6 +66,7 @@ const startServer = async () => {
     app.use("/api/food-orders", foodOrderRouter);
     app.use("/api/restaurant", restaurantRouter);
     app.use('/api/transport', transportRoutes);
+    app.use("/api/transport-bookings", transportBookingRoutes);
     app.use('/api/events', eventRoutes);
     app.use('/api/admin', adminRoutes);
     app.use('/api/reservations', reservationRoutes);
