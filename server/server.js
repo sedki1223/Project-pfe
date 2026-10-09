@@ -31,6 +31,7 @@ const startServer = async () => {
 
     const allowedOrigins = new Set([
       "http://localhost:5173",
+      "https://project-pfe-chi.vercel.app",
       ...(process.env.CLIENT_URL || "")
         .split(",")
         .map((origin) => origin.trim())
