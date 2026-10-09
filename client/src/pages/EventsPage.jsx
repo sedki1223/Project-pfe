@@ -11,7 +11,7 @@ import {
   FaPlus,
 } from 'react-icons/fa'
 
-const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '')
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 const formatDate = (dateStr) =>
   new Date(dateStr).toLocaleDateString('en-GB', {

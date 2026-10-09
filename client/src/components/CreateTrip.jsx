@@ -31,7 +31,7 @@ const SelectTravelersList = [
   { id: 3, title: 'Family', desc: 'Traveling with kids and all', icon: '👨‍👩‍👧‍👦' },
 ];
 
-const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '')
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
 
 const CreateTrip = () => {
   const navigate = useNavigate();
