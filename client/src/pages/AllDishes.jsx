@@ -3,6 +3,8 @@ import { assets } from '../assets/assets';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import StarRating from '../components/StarRating';
 
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '');
+
 const CheckBox = ({ label, selected = false, onChange = () => {} }) => (
   <label className="flex gap-3 items-center cursor-pointer mt-2 text-sm">
     <input
@@ -52,7 +54,7 @@ const AllDishes = () => {
   useEffect(() => {
     const fetchDishes = async () => {
       try {
-        const res = await fetch('http://localhost:5000/api/dishes');
+        const res = await fetch(`${API_BASE_URL}/api/dishes`);
         const data = await res.json();
         if (res.ok && data.success) {
           setDishes(data.dishes);

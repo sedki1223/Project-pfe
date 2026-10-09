@@ -6,7 +6,7 @@ import toast from 'react-hot-toast'
 import axios from 'axios'
 import { useAuth } from '@clerk/clerk-react'
 
-const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '')
 
 const RoomDetails = () => {
   const { id } = useParams()

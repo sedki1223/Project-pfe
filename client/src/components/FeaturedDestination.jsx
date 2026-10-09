@@ -3,7 +3,7 @@ import Title from './Title'
 import { useNavigate } from 'react-router-dom'
 import axios from 'axios'
 
-const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '')
 
 const NO_IMAGE = 'https://via.placeholder.com/400x300?text=No+Image'
 

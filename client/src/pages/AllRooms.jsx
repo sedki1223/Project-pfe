@@ -4,7 +4,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import StarRating from '../components/StarRating'
 import axios from 'axios'
 
-const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || '').replace(/\/$/, '')
 
 const CheckBox = ({ label, selected = false, onChange = () => {} }) => (
   <label className='flex gap-3 items-center cursor-pointer mt-2 text-sm'>
