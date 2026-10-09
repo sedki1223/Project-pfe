@@ -19,6 +19,7 @@ import eventRoutes from './routes/eventsRoutes.js'
 import adminRoutes from './routes/adminRoutes.js'
 import reservationRoutes from './routes/reservationRoutes.js'
 import dishRoutes from "./routes/dishRoutes.js";
+import transportBookingRoutes from "./routes/transportBookingRoutes.js";
 
 
 
@@ -41,8 +42,13 @@ const startServer = async () => {
     app.use(
       cors({
         origin: (origin, callback) => {
+          // Allow this team's hashed Vercel preview URLs without having to
+          // update CLIENT_URL after every preview deployment.
+          const isVercelPreviewOrigin =
+            /^https:\/\/project-[a-z0-9]+-sedki1223s-projects\.vercel\.app$/.test(origin || "");
+
           // Requests without an Origin header include server-to-server calls.
-          if (!origin || allowedOrigins.has(origin)) {
+          if (!origin || allowedOrigins.has(origin) || isVercelPreviewOrigin) {
             return callback(null, true);
           }
           return callback(null, false);
@@ -65,6 +71,7 @@ const startServer = async () => {
     app.use("/api/food-orders", foodOrderRouter);
     app.use("/api/restaurant", restaurantRouter);
     app.use('/api/transport', transportRoutes);
+    app.use("/api/transport-bookings", transportBookingRoutes);
     app.use('/api/events', eventRoutes);
     app.use('/api/admin', adminRoutes);
     app.use('/api/reservations', reservationRoutes);

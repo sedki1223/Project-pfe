@@ -1,5 +1,6 @@
+// 🚩 Final working roomRouter.js
+
 import express from 'express';
-import upload from '../middleware/uploadMiddleware.js'; // your multer middleware
 import {
   createRoom,
   getOwnerRooms,
@@ -7,17 +8,30 @@ import {
   toggleRoomAvailability,
   getRoomById
 } from '../controllers/roomController.js';
-import protect from '../controllers/authMiddleware.js';
-import { requireRole } from '../controllers/authMiddleware.js';
+import protect, { requireRole } from '../controllers/authMiddleware.js';
+import upload from '../middleware/uploadMiddleware.js';
 
 const roomRouter = express.Router();
 
-// Add multer middleware here, expecting up to 4 images with field name "images"
-roomRouter.post('/create', protect, upload.array('images', 4), createRoom);
+// Create room (POST /api/rooms/)
+roomRouter.post(
+  '/create',
+  protect,
+  requireRole(['hotelOwner']),
+  upload.array('images', 4),
+  createRoom
+);
 
+// Get all available rooms
 roomRouter.get('/', getRooms);
-roomRouter.get('/owner', protect, requireRole(["hotelOwner"]), getOwnerRooms);
-roomRouter.post('/toggle-availability', protect, requireRole(["hotelOwner"]), toggleRoomAvailability);
+
+// Get all rooms for the owner
+roomRouter.get('/owner', protect, requireRole(['hotelOwner']), getOwnerRooms);
+
+// Toggle room availability
+roomRouter.post('/toggle-availability', protect, requireRole(['hotelOwner']), toggleRoomAvailability);
+
+// Get a room by ID
 roomRouter.get('/:id', getRoomById);
 
 export default roomRouter;

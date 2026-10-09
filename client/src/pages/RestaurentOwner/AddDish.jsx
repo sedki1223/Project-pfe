@@ -1,18 +1,18 @@
-import React, { useState } from 'react'
-import Title from '../../components/Title'
-import { assets } from '../../assets/assets'
-import { useAppContext } from '@/context/AppContext'
-import toast from 'react-hot-toast'
+import React, { useState } from 'react';
+import Title from '../../components/Title';
+import { assets } from '../../assets/assets';
+import { useAppContext } from '@/context/AppContext';
+import toast from 'react-hot-toast';
 
 const AddDish = () => {
-  const { axios, getToken } = useAppContext()
+  const { axios, getToken } = useAppContext();
 
   const [images, setImages] = useState({
     1: null,
     2: null,
     3: null,
     4: null,
-  })
+  });
 
   const [inputs, setInputs] = useState({
     dishName: '',
@@ -24,43 +24,51 @@ const AddDish = () => {
       'Contains Nuts': false,
       'Chef Special': false,
     },
-  })
+  });
 
-  const [loading, setLoading] = useState(false)
+  const [loading, setLoading] = useState(false);
 
   const onSubmitHandler = async (e) => {
-    e.preventDefault()
+    e.preventDefault();
+
     if (
       !inputs.dishName ||
       !inputs.price ||
-      !inputs.features ||
       !Object.values(images).some((image) => image)
     ) {
-      toast.error('Please fill all the fields and upload images')
-      return
+      toast.error('Please fill all the fields and upload images');
+      return;
     }
-    setLoading(true)
-    try {
-      const formData = new FormData()
-      formData.append('dishName', inputs.dishName)
-      formData.append('price', inputs.price)
-      const selectedFeatures = Object.keys(inputs.features).filter(
-        (key) => inputs.features[key]
-      )
-      formData.append('features', JSON.stringify(selectedFeatures))
-      Object.keys(images).forEach((key) => {
-        if (images[key]) formData.append('images', images[key])
-      })
 
-      const { data } = await axios.post('/api/restaurant/', formData, {
+    setLoading(true);
+    try {
+const formData = new FormData();
+formData.append('name', inputs.dishName); // rename to 'name'
+formData.append('price', inputs.price);
+
+const selectedIngredients = Object.keys(inputs.features).filter(
+  (key) => inputs.features[key]
+);
+formData.append('ingredients', JSON.stringify(selectedIngredients)); // rename 'features' to 'ingredients'
+
+// For images, if your backend only supports single image, append just one:
+// formData.append('image', images[0]);
+
+// Or if multiple images allowed, make sure backend accepts 'images' array:
+Object.keys(images).forEach((key) => {
+  if (images[key]) formData.append('images', images[key]);
+});
+
+      const token = await getToken();
+
+      const { data } = await axios.post('/api/dishes/create', formData, {
         headers: {
-          Authorization: `Bearer ${getToken()}`,
-          'Content-Type': 'multipart/form-data',
+          Authorization: `Bearer ${token}`,
         },
-      })
+      });
 
       if (data.success) {
-        toast.success(data.message)
+        toast.success(data.message);
         setInputs({
           dishName: '',
           price: 0,
@@ -71,36 +79,36 @@ const AddDish = () => {
             'Contains Nuts': false,
             'Chef Special': false,
           },
-        })
+        });
         setImages({
           1: null,
           2: null,
           3: null,
           4: null,
-        })
+        });
       } else {
-        toast.error(data.message)
+        toast.error(data.message);
       }
     } catch (error) {
-      console.error(error)
-      toast.error('Something went wrong. Please try again.')
+      console.error(error);
+      toast.error('Something went wrong. Please try again.');
     } finally {
-      setLoading(false)
+      setLoading(false);
     }
-  }
+  };
 
   return (
     <form onSubmit={onSubmitHandler}>
       <Title align="left" font="outfit" title="Add Dish" subTitle="Fill in the details" />
-      {/* Upload Area For Images */}
+
       <p className="text-gray-800 mt-10">Images</p>
       <div className="grid grid-cols-2 sm:flex gap-4 my-2 flex-wrap">
         {Object.keys(images).map((key) => (
           <label htmlFor={`dishImages${key}`} key={key}>
             <img
-              className="max-h-13 cursor-pointer opacity-80"
+              className="max-h-32 cursor-pointer opacity-80 object-cover border"
               src={images[key] ? URL.createObjectURL(images[key]) : assets.uploadArea}
-              alt=""
+              alt={`Dish upload ${key}`}
             />
             <input
               type="file"
@@ -114,7 +122,7 @@ const AddDish = () => {
       </div>
 
       <div className="w-full flex max-sm:flex-col sm:gap-4 mt-4">
-        <div className="flex-1 max-w-48">
+        <div className="flex-1 max-w-96">
           <p className="text-gray-800 mt-4">Dish Name</p>
           <input
             type="text"
@@ -141,7 +149,7 @@ const AddDish = () => {
       <p className="text-gray-800 mt-4">Features</p>
       <div className="flex flex-col flex-wrap mt-1 text-gray-400 max-w-sm">
         {Object.keys(inputs.features).map((feature, index) => (
-          <div key={index}>
+          <div key={index} className="flex items-center gap-2">
             <input
               type="checkbox"
               id={`features${index + 1}`}
@@ -153,7 +161,9 @@ const AddDish = () => {
                 })
               }
             />
-            <label htmlFor={`features${index + 1}`}> {feature}</label>
+            <label htmlFor={`features${index + 1}`} className="capitalize cursor-pointer">
+              {feature}
+            </label>
           </div>
         ))}
       </div>
@@ -165,7 +175,7 @@ const AddDish = () => {
         {loading ? 'Adding Dish...' : 'Add Dish'}
       </button>
     </form>
-  )
-}
+  );
+};
 
-export default AddDish
+export default AddDish;

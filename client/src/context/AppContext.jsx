@@ -21,6 +21,7 @@ export const AppProvider = ({ children }) => {
   const [showRestaurantReg, setShowRestaurantReg] = useState(false);
 
   const [rooms, setRooms] = useState([]);
+  const [dishes, setDishes] = useState([]);
 
   // 🔍 Derived admin flag (computed from role)
   const isAdmin = ownerType === "admin";

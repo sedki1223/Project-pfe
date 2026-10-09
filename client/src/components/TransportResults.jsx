@@ -1,49 +1,55 @@
-import React, { useEffect, useState } from 'react'
-import { useLocation, Link } from 'react-router-dom'
-import { FaBus, FaTrain, FaTaxi } from 'react-icons/fa'
+import React, { useEffect, useState } from 'react';
+import { useLocation, Link } from 'react-router-dom';
+import { FaBus, FaTrain, FaTaxi } from 'react-icons/fa';
 
 const TransportResults = () => {
-  const location = useLocation()
-  const [transports, setTransports] = useState([])
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState('')
+  const location = useLocation();
+  const [transports, setTransports] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  // Helper: parse query params from URL
-  const getQueryParams = () => {
-    return new URLSearchParams(location.search)
-  }
+  const getQueryParams = () => new URLSearchParams(location.search);
 
-useEffect(() => {
-  const fetchTransports = async () => {
-    setLoading(true);
-    setError('');
-    try {
-      const params = new URLSearchParams(location.search);
-      const response = await fetch(`/api/transport?${params.toString()}`);
-      if (!response.ok) throw new Error(`Failed to fetch transport options: ${response.statusText}`);
+  useEffect(() => {
+    const fetchTransports = async () => {
+      setLoading(true);
+      setError('');
+      try {
+        const params = getQueryParams();
+        // Remove time from params before requesting backend
+        params.delete('time');
 
-      const data = await response.json();
-      setTransports(data);
-    } catch (err) {
-      console.error(err);
-      setError(err.message || 'Something went wrong');
-    } finally {
-      setLoading(false);
-    }
-  };
+        const response = await fetch(`/api/transport?${params.toString()}`);
+        if (!response.ok) throw new Error(`Failed to fetch transport options: ${response.statusText}`);
 
-  fetchTransports();
-}, [location.search]);
+        const data = await response.json();
 
-  // Icon map
+        // Now filter by time on frontend if time param exists
+        const timeParam = new URLSearchParams(location.search).get('time');
+        const filteredTransports = timeParam
+          ? data.transports.filter(t => t.time === timeParam)
+          : data.transports;
+
+        setTransports(filteredTransports);
+      } catch (err) {
+        console.error(err);
+        setError(err.message || 'Something went wrong');
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTransports();
+  }, [location.search]);
+
   const iconMap = {
     bus: <FaBus className="text-blue-600" />,
     train: <FaTrain className="text-green-600" />,
     taxi: <FaTaxi className="text-yellow-600" />,
-  }
+  };
 
   return (
-    <div className="max-w-6xl mx-auto px-6 py-16">
+    <div className="max-w-6xl mx-auto px-6 py-16 mt-16">
       <h2 className="text-3xl font-bold mb-8 text-center">Available Transport Options</h2>
 
       {loading && <p className="text-center text-lg">Loading...</p>}
@@ -65,26 +71,16 @@ useEffect(() => {
               {iconMap[t.type] || null}
               <span className="capitalize">{t.type}</span>
             </div>
-            <p>
-              <strong>Destination:</strong> {t.destination}
-            </p>
-            <p>
-              <strong>Date:</strong> {new Date(t.date).toLocaleDateString()}
-            </p>
-            <p>
-              <strong>Time:</strong> {t.time}
-            </p>
-            <p>
-              <strong>Price:</strong> ${t.price.toFixed(2)}
-            </p>
-            <p>
-              <strong>Available Seats:</strong> {t.availableSeats}
-            </p>
+            <p><strong>Destination:</strong> {t.destination}</p>
+            <p><strong>Date:</strong> {new Date(t.date).toLocaleDateString()}</p>
+            <p><strong>Time:</strong> {t.time}</p>
+            <p><strong>Price:</strong> ${t.price.toFixed(2)}</p>
+            <p><strong>Available Seats:</strong> {t.availableSeats}</p>
           </Link>
         ))}
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default TransportResults
+export default TransportResults;

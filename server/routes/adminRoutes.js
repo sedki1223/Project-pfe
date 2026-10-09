@@ -8,18 +8,20 @@ import {
   updateUserRole,
   getAllReservations
 } from '../controllers/adminController.js'
-import {  requireRole } from '../controllers/authMiddleware.js'
+
+import protect,{  requireRole }  from '../controllers/authMiddleware.js'
 
 const router = express.Router()
 
+router.use( protect )
 router.use( requireRole(['admin']))
 
-router.get('/stats', getStats)
-router.get('/users', getUsers)
-router.delete('/delete-event/:id', deleteEvent)
-router.delete('/delete-transport/:id', deleteTransport)
-router.patch('/update-user-role/:userId', updateUserRole)
-router.get('/reservations', getAllReservations)
+router.get('/stats',protect ,getStats)
+router.get('/users',protect , getUsers)
+router.delete('/delete-event/:id',protect , deleteEvent)
+router.delete('/delete-transport/:id' ,protect , deleteTransport)
+router.patch('/update-user-role/:userId',protect , updateUserRole)
+router.get('/reservations',protect , getAllReservations)
 
 
 export default router
