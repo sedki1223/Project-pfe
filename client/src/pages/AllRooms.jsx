@@ -4,6 +4,8 @@ import { useSearchParams, useNavigate } from 'react-router-dom'
 import StarRating from '../components/StarRating'
 import axios from 'axios'
 
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
+
 const CheckBox = ({ label, selected = false, onChange = () => {} }) => (
   <label className='flex gap-3 items-center cursor-pointer mt-2 text-sm'>
     <input
@@ -50,7 +52,7 @@ const AllRooms = () => {
   useEffect(() => {
     const fetchRooms = async () => {
       try {
-        const res = await axios.get('http://localhost:5000/api/rooms')
+        const res = await axios.get(`${API_BASE_URL}/api/rooms`)
         setRooms(res.data.rooms || res.data)
       } catch (err) {
         console.error('Error fetching rooms:', err)
