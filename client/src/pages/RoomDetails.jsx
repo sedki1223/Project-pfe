@@ -6,6 +6,8 @@ import toast from 'react-hot-toast'
 import axios from 'axios'
 import { useAuth } from '@clerk/clerk-react'
 
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
+
 const RoomDetails = () => {
   const { id } = useParams()
   const navigate = useNavigate()
@@ -24,7 +26,7 @@ const RoomDetails = () => {
     const fetchRoom = async () => {
       try {
         const token = await getToken()
-        const res = await axios.get(`http://localhost:5000/api/rooms/${id}`, {
+        const res = await axios.get(`${API_BASE_URL}/api/rooms/${id}`, {
           headers: { Authorization: `Bearer ${token}` }
         })
         setRoom(res.data.room)
