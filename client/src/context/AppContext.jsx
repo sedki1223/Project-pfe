@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useAuth, useUser } from "@clerk/clerk-react";
 import { toast } from "react-hot-toast";
 
-axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL;
+axios.defaults.baseURL = import.meta.env.VITE_BACKEND_URL || "";
 
 const AppContext = createContext();
 
@@ -44,7 +44,6 @@ export const AppProvider = ({ children }) => {
   const fetchUser = async () => {
     try {
       const token = await getToken(); 
-      console.log("Token:", token);
       const { data } = await axios.get("/api/user", {
         headers: { Authorization: `Bearer ${token}` },
         withCredentials: true,

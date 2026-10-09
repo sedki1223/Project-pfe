@@ -18,7 +18,6 @@ const HotelReg = () => {
     e.preventDefault();
     try {
       const token = await getToken();
-      console.log("🪪 Token:", token);
 
       const endpoint = isHotel ? '/api/hotel/register' : '/api/restaurant/register';
 
@@ -40,19 +39,16 @@ const HotelReg = () => {
         }
       );
 
-      console.log("🌐 Raw API response:", data);
 
       if (data.success) {
         toast.success(data.message || "Registration successful!");
         setIsOwner(true);
         setShowHotelReg(false);
       } else {
-        console.warn("⚠️ Backend responded with failure:", data);
         toast.error(data.message || "Registration failed");
       }
     } catch (err) {
-      console.error("❌ Registration Error:", err);
-      console.log("❗ Error response:", err.response?.data);
+      console.error("Registration failed:", err.response?.status || err.message);
       toast.error(err.response?.data?.message || err.message || "Registration failed");
     }
   };

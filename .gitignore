@@ -1,4 +1,4 @@
-﻿# Dependencies
+# Dependencies
 node_modules/
 
 # Environment files
@@ -6,12 +6,12 @@ node_modules/
 .env.*
 !.env.example
 
-# Firebase / service-account credentials
+# Firebase Admin credentials (never commit service-account keys)
 **/*serviceAccount*.json
 **/*firebaseAdmin*.json
-**/*firebase*.json
+**/*-firebase-adminsdk-*.json
 
-# Uploads / generated files
+# User uploads and generated files
 server/uploads/
 
 # Build output
@@ -27,4 +27,3 @@ coverage/
 Thumbs.db
 .vscode/
 .idea/
-server/uploads/*
