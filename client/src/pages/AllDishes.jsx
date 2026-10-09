@@ -30,6 +30,8 @@ const RadioButton = ({ label, selected = false, onChange = () => {} }) => (
   </label>
 );
 
+const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
+
 const AllDishes = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const navigate = useNavigate();
@@ -58,7 +60,7 @@ const AllDishes = () => {
     const fetchDishes = async () => {
       try {
         setLoading(true);
-        const res = await axios.get('http://localhost:5000/api/dishes');
+        const res = await axios.get(`${API_BASE_URL}/api/dishes`);
         setDishes(res.data.dishes || []);
         setError(null);
       } catch (err) {
