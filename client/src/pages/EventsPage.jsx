@@ -11,7 +11,7 @@ import {
   FaPlus,
 } from 'react-icons/fa'
 
-const API_BASE_URL = (import.meta.env.VITE_BACKEND_URL || 'http://localhost:5000').replace(/\/$/, '')
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000'
 
 const formatDate = (dateStr) =>
   new Date(dateStr).toLocaleDateString('en-GB', {
@@ -109,13 +109,6 @@ const EventsPage = () => {
     <div className="pt-20 px-4 md:px-6 lg:px-10 container mx-auto max-w-7xl">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold text-center flex-1">Explore Events in Tozeur</h1>
-        <button
-          onClick={() => navigate('/events/new')}
-          className="ml-4 flex items-center gap-2 px-4 py-2 bg-teal-600 text-white rounded hover:bg-teal-700 transition"
-          aria-label="Create new event"
-        >
-          <FaPlus /> Create New Event
-        </button>
       </div>
 
       {/* Category Tabs */}
@@ -176,39 +169,51 @@ const EventsPage = () => {
         <p className="text-center text-gray-600">No events match your filters.</p>
       ) : (
         <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-          {paginatedEvents.map((event) => (
-            <Link
-              to={`/events/${event.id}`}
-              key={event.id}
-              className="block rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 bg-white"
-              title={event.title}
-            >
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={event.image || NO_IMAGE}
-                  alt={event.title}
-                  onError={handleImageError}
-                  className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
-                />
-                <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-white">
-                  <h3 className="text-lg font-semibold">{event.title}</h3>
-                  <p className="text-xs">{formatDate(event.date)}</p>
-                </div>
-              </div>
+          {paginatedEvents.map((event) => {
+            let imgSrc = NO_IMAGE
 
-              <div className="p-4 space-y-2">
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <FaTags /> <span>{event.type}</span>
+            if (Array.isArray(event.imageUrl) && event.imageUrl.length > 0) {
+              imgSrc = event.imageUrl[0]
+            } else if (Array.isArray(event.images) && event.images.length > 0) {
+              imgSrc = event.images[0]
+            } else if (typeof event.image === 'string' && event.image.trim() !== '') {
+              imgSrc = event.image
+            }
+
+            return (
+              <Link
+                to={`/events/${event.id}`}
+                key={event.id}
+                className="block rounded-lg overflow-hidden shadow-md hover:shadow-xl transition-shadow duration-300 bg-white"
+                title={event.title}
+              >
+                <div className="relative h-48 overflow-hidden">
+                  <img
+                    src={imgSrc}
+                    alt={event.title}
+                    onError={handleImageError}
+                    className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                  />
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-3 text-white">
+                    <h3 className="text-lg font-semibold">{event.title}</h3>
+                    <p className="text-xs">{formatDate(event.date)}</p>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <FaMapMarkerAlt /> <span>{event.location}</span>
+
+                <div className="p-4 space-y-2">
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <FaTags /> <span>{event.type}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <FaMapMarkerAlt /> <span>{event.location}</span>
+                  </div>
+                  <div className="flex items-center gap-2 text-sm text-gray-600">
+                    <FaMoneyBillWave /> <span>{event.price}</span>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-gray-600">
-                  <FaMoneyBillWave /> <span>{event.price}</span>
-                </div>
-              </div>
-            </Link>
-          ))}
+              </Link>
+            )
+          })}
         </div>
       )}
 
