@@ -261,7 +261,7 @@ const Navbar = () => {
           </button>
         )}
 
-        {user && isOwner && (
+        {user && (isOwner || ownerType === "admin") && (
           <Link
             to={ownerDashboardPath}
             onClick={() => setIsMenuOpen(false)}
