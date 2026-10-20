@@ -1,52 +1,55 @@
 # Visit Tozeur
 
-Visit Tozeur is a full-stack travel and hospitality web application focused on helping users explore and plan visits to Tozeur, Tunisia. The application brings together travel itinerary generation, accommodation and room discovery, bookings, restaurants and food orders, transport, events, and role-based management features.
+Visit Tozeur is a full-stack travel and hospitality web application built around exploring Tozeur, Tunisia. It brings accommodation discovery and booking together with restaurants, food orders, transport, events, and AI-assisted trip planning.
 
-> Deployment: the frontend is intended for Vercel. Add the live URL after the production API origin and final deployment structure are confirmed.
+## Live preview
 
-## Technology stack
+[Open the deployed frontend](https://project-r87cr5mdy-sedki1223-projects.vercel.app/)
 
-### Frontend
-- **React 18** with **Vite 6**
-- **JavaScript** and JSX
-- **Tailwind CSS 4** with the Vite plugin
-- **React Router** for client-side navigation
-- **Redux Toolkit** and React Redux for shared state
-- **Clerk** for authentication
-- **Google OAuth** and Google Maps integrations
-- **Axios** for API requests
-- **Firebase Web SDK**
-- **Framer Motion**, **Lucide React**, **React Icons**, **React Hot Toast**, and **Sonner** for interface and feedback components
+> This is the current Vercel deployment URL available for this project. Preview deployment URLs can change.
 
-### Backend
-- **Node.js** with **Express 5**
-- **MongoDB** with **Mongoose**
-- **Clerk Express** for authentication integration
-- **Firebase Admin SDK / Cloud Firestore** for AI-generated trip records
-- **Groq API** for travel itinerary generation
-- **Google Generative AI SDKs** for generative features
-- **Cloudinary** for managed media
-- **Multer** for image uploads
-- **Nodemailer** for email delivery
-- **Axios**, **dotenv**, and **SVIX** for API requests, environment configuration, and webhook support
+## Features
 
-## Main capabilities
+- Explore travel and accommodation options.
+- Browse rooms and support booking workflows.
+- Restaurant discovery, food orders, and reservations.
+- Transport and event-related features.
+- AI-assisted itinerary generation for trips to Tozeur.
+- Authentication and role-aware management areas.
+- Cloud media handling and map-related integrations.
 
-- Browse travel and accommodation content.
-- Discover rooms and manage room availability.
-- Support hotel and restaurant registration flows.
-- Handle bookings, food orders, reservations, transport, and events.
-- Generate Tozeur-focused travel itineraries using an AI API and save trip results to Firestore.
-- Provide authenticated and role-aware management endpoints.
+Available functionality depends on the deployment configuration and the external services enabled for the instance.
 
-The available features and integrations depend on the environment variables and external services configured for the running instance.
+## Tech stack
 
-## Project structure
+**Frontend**
+- React 18 and Vite 6
+- JavaScript and JSX
+- Tailwind CSS 4
+- React Router
+- Redux Toolkit
+- Clerk authentication
+- Axios
+- Firebase Web SDK
+- Google Maps / Google OAuth integrations
+- Framer Motion and Lucide React
+
+**Backend**
+- Node.js and Express 5
+- MongoDB and Mongoose
+- Clerk Express
+- Firebase Admin SDK / Cloud Firestore
+- Groq and Google generative AI integrations
+- Cloudinary and Multer
+- Nodemailer
+- dotenv and SVIX
+
+## Repository structure
 
 ```text
 .
 ├── client/       # React + Vite frontend
-├── server/       # Express API, routes, controllers, models, and integrations
+├── server/       # Express API, routes, controllers, models, integrations
 ├── package.json  # Root development command
 └── README.md
 ```
@@ -54,32 +57,31 @@ The available features and integrations depend on the environment variables and 
 ## Requirements
 
 - Node.js and npm
-- A MongoDB connection
+- MongoDB connection
 - Clerk application credentials
-- Firebase Admin credentials for the trip-generation Firestore integration
-- Cloudinary credentials for media features
-- A Groq API key for AI itinerary generation
-- Any additional provider credentials required by the feature being used
+- Provider credentials for the integrations you want to use (for example Firebase, Cloudinary, and Groq)
 
-## Local development
+## Run locally
 
-Install dependencies in each package:
+1. Clone the repository and enter its directory.
+2. Install dependencies:
 
-```bash
-npm install
-npm install --prefix client
-npm install --prefix server
-```
+   ```bash
+   npm install
+   npm install --prefix client
+   npm install --prefix server
+   ```
 
-Configure the environment variables described below, then start the frontend and backend from the repository root:
+3. Create local environment files for the frontend and backend. See **Environment configuration** below.
+4. Start the frontend and backend from the project root:
 
-```bash
-npm run dev
-```
+   ```bash
+   npm run dev
+   ```
 
-The Vite development server runs on `http://localhost:5173` and proxies `/api` requests to the backend at `http://localhost:5000`. The backend uses `PORT` when set and otherwise defaults to port `5000`.
+The Vite frontend normally runs at [http://localhost:5173](http://localhost:5173). The development proxy forwards `/api` requests to the backend at `http://localhost:5000`.
 
-You can also start each part independently:
+You can also run each part separately in different terminals:
 
 ```bash
 npm run dev --prefix client
@@ -88,50 +90,48 @@ npm run dev --prefix server
 
 ## Environment configuration
 
-Never commit real secrets. Create local environment files and configure equivalent values in your deployment provider.
+Create local environment files; do not commit credentials.
 
-### Client — `client/.env`
+### `client/.env`
 
 - `VITE_CLERK_PUBLISHABLE_KEY` — Clerk publishable key.
-- `VITE_BACKEND_URL` — deployed API origin in production. For local development, it can be left empty to use the Vite `/api` proxy.
-- `VITE_CURRENCY` — optional currency symbol used by the interface.
+- `VITE_BACKEND_URL` — backend origin for deployments; for local development, leave empty to use the Vite proxy when appropriate.
+- `VITE_CURRENCY` — optional currency symbol.
 
-The client also contains integrations that may require provider-specific public configuration. Check the relevant integration before deploying those features.
+Other client integrations may need public provider configuration. Values prefixed with `VITE_` are bundled into client-side code and must never contain server secrets.
 
-### Server — `server/.env`
+### `server/.env`
 
-- `PORT` — optional API port; defaults to `5000`.
-- `CLIENT_URL` — optional comma-separated list of allowed frontend origins for production CORS, such as the Vercel site URL. Local development at `http://localhost:5173` remains allowed.
+- `PORT` — optional port; defaults to `5000`.
+- `CLIENT_URL` — optional comma-separated list of allowed frontend origins.
 - `MONGODB_URI` — MongoDB connection string.
-- `CLERK_SECRET_KEY` — Clerk server secret used by authenticated backend integrations.
+- `CLERK_SECRET_KEY` — Clerk server-side secret.
 - `CLOUDINARY_CLOUD_NAME`, `CLOUDINARY_API_KEY`, `CLOUDINARY_API_SECRET` — Cloudinary credentials.
-- `GROQ_API_KEY` — Groq API key for itinerary generation.
-- `FIREBASE_SERVICE_ACCOUNT_JSON` — optional JSON string containing the Firebase Admin service-account object; alternatively use `FIREBASE_PROJECT_ID`, `FIREBASE_CLIENT_EMAIL`, and `FIREBASE_PRIVATE_KEY`. Store credentials securely; if the private key is supplied as a single-line environment value, encode line breaks as `\\n`.
+- `GROQ_API_KEY` — Groq API key.
+- Firebase Admin credentials, supplied using the environment variable format supported by the server configuration.
 
-Some integrations may require additional variables. Do not put server secrets in `VITE_*` variables, because Vite exposes those values to browser code.
-
-## Deployment
-
-The frontend is intended for Vercel. Configure the client environment variables in the Vercel project and set `VITE_BACKEND_URL` to the HTTPS origin of the deployed backend. The Express API must be deployed separately to a Node-compatible hosting environment with its server-side environment variables configured.
-
-Update the Vite API proxy only if the local backend port changes. The development proxy is not a production API deployment.
-
-## Security and repository hygiene
-
-- Keep `.env` files, service-account JSON files, and credentials out of version control.
-- Use separate production credentials and restrict provider keys where supported.
-- Do not log authentication tokens or private API responses.
-- Uploaded files are runtime data, not source code; production media should use the configured storage service where appropriate.
+Additional integrations may require their own environment variables. Configure production values in the hosting provider rather than committing them to the repository.
 
 ## Available scripts
 
 | Location | Command | Purpose |
 | --- | --- | --- |
-| Repository root | `npm run dev` | Start client and server concurrently |
-| `client/` | `npm run dev` | Start Vite development server |
-| `client/` | `npm run build` | Build frontend assets |
-| `client/` | `npm run lint` | Run ESLint |
-| `client/` | `npm run preview` | Preview the production build locally |
-| `server/` | `npm start` | Start the API with Node.js |
-| `server/` | `npm run dev` | Start the API with Nodemon |
-| `server/` | `npm run sync:clerk-users` | Run the Clerk user synchronization script |
+| Project root | `npm run dev` | Starts the backend and frontend together |
+| `client/` | `npm run dev` | Starts the Vite development server |
+| `client/` | `npm run build` | Builds the frontend |
+| `client/` | `npm run lint` | Runs ESLint |
+| `client/` | `npm run preview` | Serves the built frontend locally |
+| `server/` | `npm start` | Starts the API with Node.js |
+| `server/` | `npm run dev` | Starts the API with Nodemon |
+| `server/` | `npm run sync:clerk-users` | Runs the Clerk user synchronization script |
+
+## Security notes
+
+- Never commit `.env` files, service-account JSON files, API keys, private keys, or authentication tokens.
+- Rotate any credentials that may have been committed or exposed previously.
+- Restrict provider keys and database access where possible.
+- Treat uploaded media and runtime data separately from source code.
+
+## Project status
+
+This repository contains the project source code. A successful local setup or deployment requires valid environment configuration and access to the external services used by the application. Not every integration is guaranteed to be available in every environment.
