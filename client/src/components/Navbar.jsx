@@ -39,6 +39,13 @@ const Navbar = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, [location.pathname]);
 
+  const ownerDashboardPath =
+    ownerType === "admin"
+      ? "/admin"
+      : ownerType === "restaurantowner" || ownerType === "foodowner"
+        ? "/restaurantowner"
+        : "/hotelowner";
+
   const openHotelModal = () => setShowHotelReg(true);
   const openRestaurantModal = () => setShowRestaurantReg(true);
 
@@ -151,7 +158,7 @@ const Navbar = () => {
             Dashboard
           </Link>
         )}
-        {user && isOwner && ownerType === "restaurantowner" && (
+        {user && isOwner && (ownerType === "restaurantowner" || ownerType === "foodowner") && (
           <Link
             to="/restaurantowner"
             className={`px-4 py-2 rounded-md border ${
@@ -254,9 +261,9 @@ const Navbar = () => {
           </button>
         )}
 
-        {user && isOwner && (
+        {user && (isOwner || ownerType === "admin") && (
           <Link
-            to="/hotelowner"
+            to={ownerDashboardPath}
             onClick={() => setIsMenuOpen(false)}
             className="px-4 py-2 rounded-md border border-gray-700 text-gray-700 hover:bg-gray-100 transition-colors w-full max-w-xs text-center"
           >
